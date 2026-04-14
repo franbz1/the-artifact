@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo, useState, useCallback, type RefObject } from "react";
+import { useRef, useMemo, useState, useCallback, useEffect, type RefObject } from "react";
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
 import { createArtifactGeometry, simplex3 } from "./artifact.geometry";
@@ -30,24 +30,69 @@ export function ArtifactMesh({ analyserRef }: ArtifactMeshProps) {
   const cursorSmoothed = useRef(new THREE.Vector3(0, 0, 2));
   const dataArray = useRef<Uint8Array<ArrayBuffer> | null>(null);
   const clock = useRef(0);
+  const userQuaternion = useRef(new THREE.Quaternion());
+  const isDragging = useRef(false);
+  const prevPointer = useRef({ x: 0, y: 0 });
+  const wobbleEuler = useRef(new THREE.Euler());
+  const wobbleQuat = useRef(new THREE.Quaternion());
   const [hovered, setHovered] = useState(false);
   const { gl } = useThree();
 
   const onPointerOver = useCallback(() => {
     setHovered(true);
-    gl.domElement.style.cursor = "grab";
+    if (!isDragging.current) gl.domElement.style.cursor = "grab";
   }, [gl]);
 
   const onPointerOut = useCallback(() => {
     setHovered(false);
-    gl.domElement.style.cursor = "";
+    if (!isDragging.current) gl.domElement.style.cursor = "";
   }, [gl]);
 
   const onPointerMove = useCallback((e: ThreeEvent<PointerEvent>) => {
-    if (e.point && e.face) {
-      cursorTarget.current.copy(e.point).addScaledVector(e.face.normal, CURSOR_LIGHT_OFFSET);
+    if (e.point && e.face && meshRef.current) {
+      const worldNormal = e.face.normal.clone().transformDirection(meshRef.current.matrixWorld);
+      cursorTarget.current.copy(e.point).addScaledVector(worldNormal, CURSOR_LIGHT_OFFSET);
     }
   }, []);
+
+  const onPointerDown = useCallback((e: ThreeEvent<PointerEvent>) => {
+    isDragging.current = true;
+    prevPointer.current = { x: e.nativeEvent.clientX, y: e.nativeEvent.clientY };
+    gl.domElement.style.cursor = "grabbing";
+    e.stopPropagation();
+  }, [gl]);
+
+  useEffect(() => {
+    const DRAG_SPEED = 0.006;
+
+    const handlePointerMove = (e: PointerEvent) => {
+      if (!isDragging.current) return;
+      const dx = e.clientX - prevPointer.current.x;
+      const dy = e.clientY - prevPointer.current.y;
+      prevPointer.current = { x: e.clientX, y: e.clientY };
+
+      const qY = new THREE.Quaternion().setFromAxisAngle(
+        new THREE.Vector3(0, 1, 0), dx * DRAG_SPEED,
+      );
+      const qX = new THREE.Quaternion().setFromAxisAngle(
+        new THREE.Vector3(1, 0, 0), dy * DRAG_SPEED,
+      );
+      userQuaternion.current.premultiply(qY).premultiply(qX);
+    };
+
+    const handlePointerUp = () => {
+      if (!isDragging.current) return;
+      isDragging.current = false;
+      gl.domElement.style.cursor = "";
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+    };
+  }, [gl]);
 
   const { geometry, basePositions, directions } = useMemo(() => {
     const geo = createArtifactGeometry();
@@ -175,7 +220,13 @@ export function ArtifactMesh({ analyserRef }: ArtifactMeshProps) {
     smoothedScale.current += (targetScale - smoothedScale.current) * 0.06;
     mesh.scale.setScalar(smoothedScale.current);
 
-    mesh.rotation.x = Math.sin(t * 0.12) * 0.03;
+    wobbleEuler.current.set(
+      Math.sin(t * 0.18) * 0.05,
+      Math.sin(t * 0.14) * 0.035,
+      0,
+    );
+    wobbleQuat.current.setFromEuler(wobbleEuler.current);
+    mesh.quaternion.copy(userQuaternion.current).multiply(wobbleQuat.current);
 
     if (material) {
       material.emissiveIntensity =
@@ -199,6 +250,7 @@ export function ArtifactMesh({ analyserRef }: ArtifactMeshProps) {
         onPointerOver={onPointerOver}
         onPointerOut={onPointerOut}
         onPointerMove={onPointerMove}
+        onPointerDown={onPointerDown}
       >
         <meshPhysicalMaterial
           ref={materialRef}

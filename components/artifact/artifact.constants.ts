@@ -9,9 +9,9 @@ export const SPHERE_CONFIG = {
 } as const;
 
 export const IDLE_CONFIG = {
-  baseDeform: 0.04,
+  baseDeform: 0.06,
   noiseFrequency: 0.45,
-  timeSpeed: 0.1,
+  timeSpeed: 0.14,
 } as const;
 
 export const AUDIO_CONFIG = {
