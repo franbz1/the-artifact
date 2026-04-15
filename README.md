@@ -1,120 +1,112 @@
-## Cola de reproducción (Playback Queue)
+# The Artifact
 
-Este proyecto separa **biblioteca** y **cola**:
-
-- **Biblioteca** (`library` en `usePlaybackQueue`): pistas del catálogo interno (`GET /api/music`) más archivos subidos en la sesión (drag-and-drop / file picker). Los subidos **no persisten** al recargar.
-- **Cola** (`DoublyLinkedPlaylist`): única fuente conectada al reproductor (`loadFile` / `loadUrl`). Tras un reload, la cola vuelve a reflejar solo el orden del API; la biblioteca vuelve a los mismos ítems de API más vacío de subidos.
-
-La cola vive en contexto (`AudioProvider`) y se conecta con:
-
-- **Carga inicial** desde archivos en `public/music` (vía API)
-- **Navegación** anterior/siguiente en la UI
-
-> Por ahora la cola **solo emite estado por consola** (logs), no hay UI de biblioteca/cola.
-
-### Estructura de datos
-
-- **Tipos**: `TrackEntry` / `TrackSource` (`file` o `url`) en `lib/playback-queue/types.ts`; helpers `createCatalogTrackEntry`, `cloneTrackEntryForQueue`.
-- **Lista doblemente enlazada + cursor**: `DoublyLinkedPlaylist` en `lib/playback-queue/doubly-linked-playlist.ts`
-  - Mantiene `head`, `tail` y un puntero `current` (la pista seleccionada para reproducción)
-  - Operaciones soportadas: `appendEntry`, `removeById`, `advanceCurrent`, `retreatCurrent`, `moveBefore`, `moveAfter`
-
-### Carga inicial (seed) desde `public/music`
-
-1. Al montar la app, el hook `usePlaybackQueue` hace un `fetch('/api/music')`.
-2. El endpoint `GET /api/music` lista los archivos en `public/music` (filtra extensiones de audio) y devuelve:
-
-```json
-{ "tracks": [ { "url": "/music/foo.mp3", "label": "foo.mp3" } ] }
-```
-
-3. Esas URLs rellenan la **biblioteca** y la **cola** en orden (por nombre), como `TrackSource.kind = 'url'` (ids de catálogo estables + clones en la cola).
-4. Tras poblar la cola, si hay al menos una pista, se **carga** la primera en el engine (`loadUrl`), pero **queda pausada** (sin autoplay).
-
-Ruta relevante:
-- `app/api/music/route.ts`
-- `public/music/` (incluye `.gitkeep` para versionar la carpeta vacía)
-
-### Agregar canciones por drag-and-drop / file picker
-
-- El drop y el input llaman `addLibraryFile(file)` desde `AudioChrome` (solo biblioteca).
-- Para reproducir un ítem de biblioteca habría que usar `addLibraryEntryToQueue(id)` (API expuesta para una UI futura).
-
-Archivo relevante:
-- `components/audio/AudioChrome.tsx`
-
-### Navegación (prev/next + hold seek)
-
-Los botones de la barra de control (`ControlStrip`) ahora tienen dos comportamientos:
-
-- **Click corto**:
-  - Back: `skipToPrevious()` (cambia a la pista anterior en la cola)
-  - Forward: `skipToNext()` (cambia a la siguiente pista en la cola)
-- **Mantener presionado**:
-  - Repite un `seek(±CONTROL_STRIP_SKIP_SECONDS)` cada cierto intervalo mientras se mantiene presionado
-  - Esto NO cambia la pista, solo avanza/retrocede dentro de la misma
-
-Archivos relevantes:
-- `components/player/ControlStrip.tsx`
-- `components/player/control-strip.constants.ts`
-
-### Auto-advance al terminar una pista
-
-- Cuando el `HTMLAudioElement` emite `ended`, el engine invoca `onMediaEnded`.
-- La cola intenta mover `current` a `next` y, si existe, **carga** la siguiente pista y **reproduce** (auto-advance).
-- Si no hay siguiente, se mantiene el comportamiento de “terminó y se detiene”.
-
-Archivos relevantes:
-- `hooks/useAudioEngine.ts`
-- `hooks/usePlaybackQueue.ts`
-- `components/audio/AudioProvider.tsx`
-
-### Logs por consola
-
-Cada mutación importante imprime un snapshot:
-
-- Orden de la cola (labels)
-- `currentId` y `currentLabel`
-
-El prefijo es `"[playback-queue]"`.
+A **music player built as an experience**, not a utility screen. The interface is imagined as a buried relic—warm void, carved stone, faint motion—visually inspired by the world of *Dune*. It was created by [Francisco Ruales](https://github.com/franbz1).
 
 ---
 
-## Getting Started
+## The idea
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Most players optimize for density: lists, chrome, and speed. **The Artifact** optimizes for **atmosphere**. You still get a real queue, a library, and file playback, but the center of the app is a **3D sculptural object** that reacts to the music, plus a minimal, ritual-like control strip. The goal is to feel like you discovered an object in a chamber, not like you opened another tab.
 
-## Getting Started
+---
 
-First, run the development server:
+## What you need
+
+- **Desktop or laptop** (pointer + keyboard). The experience is gated: small viewports and touch-first devices are blocked with a short notice—layout and interaction are designed for larger screens.
+- **Node.js** for local development.
+
+---
+
+## Quick start
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000). On first visit you’ll see a **short entry screen** (authorship, *Dune* inspiration, how drag-and-drop works). After you continue, a cookie remembers onboarding; the 3D scene and catalog load **after** that step so the first paint stays light.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**Production build:**
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## How to use it
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Seed tracks from the project
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Drop audio files into `public/music/`. On startup (after you enter the experience), the app calls `GET /api/music`, which lists those files and **seeds both the library and the queue** in filename order. Playback loads the first track but stays **paused** until you press play.
 
-## Deploy on Vercel
+### Add your own files in the session
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Drag and drop** audio files onto the page (or use the file picker in the control area). They appear in the **library**. Uploaded files **do not persist** after a full reload—only the `public/music` catalog is re-listed from disk.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Library and queue (drag and drop)
+
+- **Library** — catalog + session uploads; drag tracks toward the **queue** to add or insert them.
+- **Playback queue** — the only structure wired to the audio engine (`loadFile` / `loadUrl`). Reorder entries by dragging; drag out to the library zone or outside to remove (with confirmation where needed).
+
+Transport controls support **short click** (previous / next track) and **hold** (seek inside the current track without changing tracks). When a track ends, the queue **auto-advances** if there is a next node.
+
+---
+
+## Technical overview
+
+### Stack
+
+| Layer | Choice |
+|--------|--------|
+| Framework | **Next.js** (App Router), TypeScript |
+| Styling | **Tailwind CSS v4** — tokens live in `app/globals.css` |
+| 3D | **Three.js** + **React Three Fiber** + **drei** + **postprocessing** |
+| Audio | Web Audio API + `HTMLAudioElement` (see `useAudioEngine`) |
+| Drag and drop | **@dnd-kit** for library ↔ queue interactions |
+
+### Why a doubly linked list for the queue?
+
+The playback order is modeled as a **`DoublyLinkedPlaylist`** (`lib/playback-queue/doubly-linked-playlist.ts`): nodes carry `TrackEntry` values, and the structure keeps **`head`**, **`tail`**, and a **`current`** cursor for the active track.
+
+Doubly linking makes **O(1) insertion and removal** at known nodes practical—important when the user reorders the queue or drags items from the library. Moving “before” or “after” another track maps to **splicing nodes** without shifting whole arrays. `advanceCurrent` / `retreatCurrent` walk the list for next/previous; when the audio element fires `ended`, the hook advances the cursor and loads the next source.
+
+The **library** is a separate list in React state (catalog URLs + ephemeral `File` sources). Queue entries are **clones** of library entries so the same source can appear more than once in the queue if needed.
+
+Types and helpers (`TrackEntry`, `TrackSource`, catalog vs file ids) live in `lib/playback-queue/types.ts`.
+
+### Three.js / R3F role
+
+The central **artifact mesh** is rendered in a R3F `<Canvas>` (`components/artifact/`). The Web Audio **analyser node** is passed in via refs so the render loop can read levels **without React re-renders every frame**. Materials stay dark and metallic; emissive and motion tie into amplitude where designed—performance rules favor **mutating geometry or uniforms in `useFrame`**, not storing audio data in React state.
+
+Supporting 2D layers (waveform strip, dust/light overlays, progress) sit in `components/visualizer/` and stay DOM/canvas-2D where that is cheaper than 3D text or full-screen post work.
+
+### API route
+
+`app/api/music/route.ts` reads `public/music/`, filters by audio extensions, and returns JSON `{ tracks: [{ url, label }] }` used to build catalog `TrackEntry` rows.
+
+---
+
+## Project layout (short)
+
+```
+app/                 App Router, global CSS, page shell
+components/artifact/  R3F canvas + scene + mesh
+components/audio/     Provider, chrome, drop targets
+components/player/    Controls, secondary panels, DnD wiring
+components/visualizer/ Waveform, overlays, atmosphere
+components/onboarding/ Entry gate + cookie
+hooks/                Audio engine, queue, waveform, amplitude
+lib/playback-queue/   Types + doubly linked playlist
+public/music/         Optional seeded audio files
+```
+
+---
+
+## Credits
+
+- **Author:** Francisco Ruales — [github.com/franbz1](https://github.com/franbz1)  
+- **Visual inspiration:** the aesthetic world of *Dune* and *Destiny*
+
+---
