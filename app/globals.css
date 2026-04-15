@@ -140,6 +140,79 @@
   90% { transform: translate(-3%, 1%); }
 }
 
+/* Control strip — long track names crawl within a narrow slot (geological pace). */
+@keyframes track-title-crawl {
+  0%, 18% { transform: translateX(0); }
+  40%, 58% { transform: translateX(var(--track-shift, 0px)); }
+  76%, 100% { transform: translateX(0); }
+}
+
+.track-title-crawl {
+  animation: track-title-crawl 14s var(--ease-awareness) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track-title-crawl {
+    animation: none;
+  }
+}
+
+/* Control strip — vertical volume (rotation on wrapper); 1px line hidden until thumb hover / drag / focus. */
+.control-strip-volume-range {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  accent-color: transparent;
+}
+
+.control-strip-volume-range::-webkit-slider-runnable-track {
+  height: 1px;
+  border-radius: 0;
+  background: transparent;
+}
+
+.control-strip-volume-range.control-strip-volume-range--track-lit::-webkit-slider-runnable-track,
+.control-strip-volume-range:focus-visible::-webkit-slider-runnable-track {
+  background: var(--color-lunar-bright);
+}
+
+.control-strip-volume-range::-moz-range-track {
+  height: 1px;
+  border-radius: 0;
+  background: transparent;
+}
+
+.control-strip-volume-range::-moz-range-progress {
+  height: 1px;
+  border-radius: 0;
+  background: transparent;
+}
+
+.control-strip-volume-range.control-strip-volume-range--track-lit::-moz-range-track,
+.control-strip-volume-range.control-strip-volume-range--track-lit::-moz-range-progress,
+.control-strip-volume-range:focus-visible::-moz-range-track,
+.control-strip-volume-range:focus-visible::-moz-range-progress {
+  background: var(--color-lunar-bright);
+}
+
+.control-strip-volume-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-lunar-bright);
+  border: none;
+  margin-top: -3.5px;
+}
+
+.control-strip-volume-range::-moz-range-thumb {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-lunar-bright);
+  border: none;
+}
+
 /* -------------------------------------------------------------------------
    BASE LAYER
    The foundation: dark, textured, alive at the edges.

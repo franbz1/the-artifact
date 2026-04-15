@@ -1,3 +1,42 @@
+// -- Progress tonal split (played vs unplayed wave) --
+
+export const PROGRESS_CONFIG = {
+  /** Multiply base stroke opacity for the played overlay (capped at 1 in render). */
+  playedOpacityMultiplier: 1.5,
+  /** Multiply base fill opacity for the played overlay (capped at 1 in render). */
+  playedFillMultiplier: 2.0,
+  /** Blend factor toward lunar RGB for played stroke/fill (0 = band color only). */
+  lunarTintBlend: 0.35,
+  /** Lunar accent — matches --color-lunar */
+  lunarRgb: "61, 92, 58",
+} as const;
+
+/** Seek handle on the progress strip (DOM overlay, not canvas). */
+export const PROGRESS_HANDLE = {
+  /** Outer diameter (w/h) in px — hit area uses slightly larger padding in CSS. */
+  diameterPx: 12,
+} as const;
+
+/** CSS custom property set by WaveCanvas each frame — Y from top of strip to gradient end. */
+export const PROGRESS_DOT_TOP_VAR = "--progress-dot-top";
+
+/**
+ * Approximate Y (px from top of wave strip) where fill gradients end — used as fallback before the first frame.
+ */
+export function approximateWaveFillBottomPx(
+  canvasCssHeight: number = WAVE_CONFIG.height,
+): number {
+  const padY = canvasCssHeight * WAVE_CONFIG.verticalPaddingRatio;
+  const innerH = canvasCssHeight - padY * 2;
+  const midY = padY + innerH * 0.5;
+  const peakRange = innerH * WAVE_CONFIG.peakHeightRatio;
+  const approxWaveMaxY = midY + peakRange;
+  return Math.min(
+    canvasCssHeight,
+    approxWaveMaxY + canvasCssHeight * WAVE_CONFIG.fillGradientExtendRatio,
+  );
+}
+
 // -- Wave Canvas --
 
 export const WAVE_CONFIG = {
@@ -15,6 +54,20 @@ export const WAVE_CONFIG = {
   drawPoints: 128,
   idleSineSpeed: 0.0003,
 } as const;
+
+/**
+ * Wave + seek strip anchor — shared by WaveCanvas and ProgressOverlay.
+ * Higher values = more room below for controls (must stay in sync).
+ */
+export const WAVE_STRIP_BOTTOM_CLASS =
+  "bottom-24 left-0 md:bottom-32" as const;
+
+/**
+ * Control cluster: fixed above the viewport bottom, tucked under the wave strip
+ * (see WAVE_STRIP_BOTTOM_CLASS — keep ~0.5rem gap between anchors).
+ */
+export const CONTROL_STRIP_DOCK_CLASS =
+  "bottom-[5.5rem] left-0 right-0 md:bottom-[7.5rem]" as const;
 
 // Frequency bands — each rendered as its own wave, all layered at the same vertical center.
 // binStart/binEnd are fractions of frequencyBinCount (0-1).

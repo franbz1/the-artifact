@@ -9,6 +9,8 @@ export interface AudioEngineState {
   isLoaded: boolean;
   fileName: string | null;
   analyserNode: AnalyserNode | null;
+  /** 0–1, mirrors HTMLMediaElement.volume */
+  volume: number;
 }
 
 export interface AudioEngineControls {
@@ -16,6 +18,14 @@ export interface AudioEngineControls {
   pause: () => void;
   toggle: () => Promise<void>;
   seek: (time: number) => void;
+  setVolume: (volume: number) => void;
+  /**
+   * Sets HTMLMediaElement.volume only (no React state). Use while dragging a slider;
+   * call commitVolumeFromElement when the gesture ends to sync context once.
+   */
+  applyVolumeImmediate: (volume: number) => void;
+  /** Pushes the current audio element volume into React state (call after drag ends). */
+  commitVolumeFromElement: () => void;
   loadFile: (file: File) => Promise<void>;
   loadUrl: (url: string) => Promise<void>;
 }
@@ -30,6 +40,8 @@ export function useAudioEngine(): AudioEngine {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const objectUrlRef = useRef<string | null>(null);
+  /** Skips syncing volume into React when applyVolumeImmediate triggered volumechange. */
+  const skipVolumeStateFromImmediateRef = useRef(false);
 
   const [state, setState] = useState<AudioEngineState>({
     isPlaying: false,
@@ -38,6 +50,7 @@ export function useAudioEngine(): AudioEngine {
     isLoaded: false,
     fileName: null,
     analyserNode: null,
+    volume: 1,
   });
 
   const ensureAudioContext = useCallback(() => {
@@ -101,12 +114,17 @@ export function useAudioEngine(): AudioEngine {
     const onEnded = () => {
       setState((prev) => ({ ...prev, isPlaying: false, currentTime: 0 }));
     };
+    const onVolumeChange = () => {
+      if (skipVolumeStateFromImmediateRef.current) return;
+      setState((prev) => ({ ...prev, volume: element.volume }));
+    };
 
     element.addEventListener("timeupdate", onTimeUpdate);
     element.addEventListener("durationchange", onDurationChange);
     element.addEventListener("play", onPlay);
     element.addEventListener("pause", onPause);
     element.addEventListener("ended", onEnded);
+    element.addEventListener("volumechange", onVolumeChange);
 
     return () => {
       element.removeEventListener("timeupdate", onTimeUpdate);
@@ -114,11 +132,13 @@ export function useAudioEngine(): AudioEngine {
       element.removeEventListener("play", onPlay);
       element.removeEventListener("pause", onPause);
       element.removeEventListener("ended", onEnded);
+      element.removeEventListener("volumechange", onVolumeChange);
     };
   }, []);
 
   useEffect(() => {
     const element = ensureAudioElement();
+    setState((prev) => ({ ...prev, volume: element.volume }));
     const unbind = bindEvents(element);
 
     return () => {
@@ -238,12 +258,44 @@ export function useAudioEngine(): AudioEngine {
     }
   }, []);
 
+  const applyVolumeImmediate = useCallback((volume: number) => {
+    const element = audioElementRef.current;
+    if (!element) return;
+    const clamped = Math.min(1, Math.max(0, volume));
+    skipVolumeStateFromImmediateRef.current = true;
+    element.volume = clamped;
+    queueMicrotask(() => {
+      skipVolumeStateFromImmediateRef.current = false;
+    });
+  }, []);
+
+  const commitVolumeFromElement = useCallback(() => {
+    const element = audioElementRef.current;
+    if (!element) return;
+    setState((prev) =>
+      prev.volume === element.volume
+        ? prev
+        : { ...prev, volume: element.volume },
+    );
+  }, []);
+
+  const setVolume = useCallback((volume: number) => {
+    const element = audioElementRef.current;
+    if (!element) return;
+    const clamped = Math.min(1, Math.max(0, volume));
+    element.volume = clamped;
+    // volumechange syncs React state (skipped only during applyVolumeImmediate)
+  }, []);
+
   return {
     ...state,
     play,
     pause,
     toggle,
     seek,
+    setVolume,
+    applyVolumeImmediate,
+    commitVolumeFromElement,
     loadFile,
     loadUrl,
   };

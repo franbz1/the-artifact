@@ -1,12 +1,21 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, type MutableRefObject, type RefObject } from "react";
 import { cn } from "@/lib/utils";
-import { WAVE_CONFIG, FREQUENCY_BANDS } from "./visualizer.constants";
+import {
+  WAVE_CONFIG,
+  FREQUENCY_BANDS,
+  PROGRESS_CONFIG,
+  PROGRESS_DOT_TOP_VAR,
+} from "./visualizer.constants";
 import type { WaveformRefs } from "@/hooks/useWaveformData";
 
 interface WaveCanvasProps {
   waveformRefs: WaveformRefs;
+  /** 0–1 playback position; read each frame from the ref (stable object, no effect restart). */
+  progressRef: MutableRefObject<number>;
+  /** Strip element that hosts the seek handle — receives deepest fill-bottom Y each frame. */
+  progressStripRef?: RefObject<HTMLElement | null>;
   className?: string;
 }
 
@@ -54,7 +63,60 @@ function shapeAmplitude(raw: number): number {
   return Math.sign(raw) * Math.pow(Math.abs(raw), 0.75);
 }
 
-export function WaveCanvas({ waveformRefs, className }: WaveCanvasProps) {
+function parseRgbTriplet(rgb: string): [number, number, number] {
+  const parts = rgb.split(",").map((s) => Number(s.trim()));
+  return [parts[0]!, parts[1]!, parts[2]!];
+}
+
+/** Blend band RGB string toward lunar for played overlay. */
+function blendTowardLunar(bandRgb: string, lunarRgb: string, t: number): string {
+  const [br, bg, bb] = parseRgbTriplet(bandRgb);
+  const [lr, lg, lb] = parseRgbTriplet(lunarRgb);
+  return `${Math.round(br + (lr - br) * t)}, ${Math.round(bg + (lg - bg) * t)}, ${Math.round(bb + (lb - bb) * t)}`;
+}
+
+function addWaveLinePath(
+  ctx: CanvasRenderingContext2D,
+  yValues: readonly number[],
+  sliceWidth: number,
+) {
+  const pts = yValues.length;
+  for (let i = 0; i < pts; i++) {
+    const x = i * sliceWidth;
+    if (i === 0) {
+      ctx.moveTo(x, yValues[i]!);
+    } else {
+      const prevX = (i - 1) * sliceWidth;
+      const cpX = (prevX + x) / 2;
+      ctx.quadraticCurveTo(
+        prevX,
+        yValues[i - 1]!,
+        cpX,
+        (yValues[i - 1]! + yValues[i]!) / 2,
+      );
+    }
+  }
+}
+
+function addWaveFillPath(
+  ctx: CanvasRenderingContext2D,
+  yValues: readonly number[],
+  sliceWidth: number,
+  width: number,
+  fillBottom: number,
+) {
+  addWaveLinePath(ctx, yValues, sliceWidth);
+  ctx.lineTo(width, fillBottom);
+  ctx.lineTo(0, fillBottom);
+  ctx.closePath();
+}
+
+export function WaveCanvas({
+  waveformRefs,
+  progressRef,
+  progressStripRef,
+  className,
+}: WaveCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number>(0);
   const clockRef = useRef(0);
@@ -106,6 +168,8 @@ export function WaveCanvas({ waveformRefs, className }: WaveCanvasProps) {
       const peakRange = innerH * WAVE_CONFIG.peakHeightRatio;
       const sliceWidth = width / (pts - 1);
 
+      let deepestFillBottom = 0;
+
       for (let b = 0; b < FREQUENCY_BANDS.length; b++) {
         const band = FREQUENCY_BANDS[b];
         const buf = buffers[b];
@@ -136,6 +200,7 @@ export function WaveCanvas({ waveformRefs, className }: WaveCanvasProps) {
           height,
           waveMaxY + height * WAVE_CONFIG.fillGradientExtendRatio,
         );
+        deepestFillBottom = Math.max(deepestFillBottom, fillBottom);
 
         ctx.beginPath();
         for (let i = 0; i < pts; i++) {
@@ -176,6 +241,59 @@ export function WaveCanvas({ waveformRefs, className }: WaveCanvasProps) {
         }
 
         ctx.stroke();
+
+        // -- Played tonal overlay (hard edge at progress — clip, no horizontal fade) --
+        const progress = Math.min(1, Math.max(0, progressRef.current));
+        const progressX = Math.min(width, Math.max(0, progress * width));
+        if (progressX > 0) {
+          const strokeRgb = blendTowardLunar(
+            band.color,
+            PROGRESS_CONFIG.lunarRgb,
+            PROGRESS_CONFIG.lunarTintBlend,
+          );
+          const fillRgb = blendTowardLunar(
+            band.color,
+            PROGRESS_CONFIG.lunarRgb,
+            PROGRESS_CONFIG.lunarTintBlend * 0.85,
+          );
+          const boostOpacity = Math.min(
+            1,
+            band.opacity * PROGRESS_CONFIG.playedOpacityMultiplier,
+          );
+          const boostFill = Math.min(
+            1,
+            band.fillOpacity * PROGRESS_CONFIG.playedFillMultiplier,
+          );
+
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(0, 0, progressX, height);
+          ctx.clip();
+
+          ctx.beginPath();
+          addWaveFillPath(ctx, yValues, sliceWidth, width, fillBottom);
+          const fillGradPlayed = ctx.createLinearGradient(0, waveMaxY, 0, fillBottom);
+          fillGradPlayed.addColorStop(0, `rgba(${fillRgb}, ${boostFill})`);
+          fillGradPlayed.addColorStop(
+            0.65,
+            `rgba(${fillRgb}, ${boostFill * 0.25})`,
+          );
+          fillGradPlayed.addColorStop(1, `rgba(${fillRgb}, 0)`);
+          ctx.fillStyle = fillGradPlayed;
+          ctx.fill();
+
+          ctx.beginPath();
+          addWaveLinePath(ctx, yValues, sliceWidth);
+          ctx.lineWidth = band.lineWidth;
+          ctx.strokeStyle = `rgba(${strokeRgb}, ${boostOpacity})`;
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+
+      const strip = progressStripRef?.current;
+      if (strip) {
+        strip.style.setProperty(PROGRESS_DOT_TOP_VAR, `${deepestFillBottom}px`);
       }
 
       rafRef.current = requestAnimationFrame(tick);
@@ -187,7 +305,7 @@ export function WaveCanvas({ waveformRefs, className }: WaveCanvasProps) {
       cancelAnimationFrame(rafRef.current);
       window.removeEventListener("resize", applySize);
     };
-  }, [waveformRefs]);
+  }, [waveformRefs, progressRef, progressStripRef]);
 
   return (
     <canvas

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { AudioProvider, useAudio } from "@/components/audio/AudioProvider";
-import { AudioDropZone } from "@/components/audio/AudioDropZone";
+import { AudioChrome } from "@/components/audio/AudioChrome";
 import { Visualizer } from "@/components/visualizer/Visualizer";
 import { DEFAULT_SONG_URL } from "@/components/visualizer/visualizer.constants";
 
@@ -26,7 +26,7 @@ export default function Home() {
       <main className="relative flex min-h-screen items-center justify-center overflow-hidden">
         <Visualizer />
       </main>
-      <AudioDropZone />
+      <AudioChrome />
     </AudioProvider>
   );
 }
