@@ -2,6 +2,8 @@
 
 A **music player built as an experience**, not a utility screen. The interface is imagined as a buried relic—warm void, carved stone, faint motion—visually inspired by the world of *Dune*. It was created by [Francisco Ruales](https://github.com/franbz1).
 
+<img width="1919" height="877" alt="image" src="https://github.com/user-attachments/assets/4547a05a-2379-4cca-9d0c-056841d58060" />
+
 ---
 
 ## The idea
