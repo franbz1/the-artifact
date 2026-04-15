@@ -28,7 +28,14 @@ export function useAudio(): AudioContextValue {
   return ctx;
 }
 
-export function AudioProvider({ children }: { children: ReactNode }) {
+export function AudioProvider({
+  children,
+  catalogBootstrapEnabled = true,
+}: {
+  children: ReactNode;
+  /** When false, skips loading `public/music` via `/api/music` until set true (entry gate). */
+  catalogBootstrapEnabled?: boolean;
+}) {
   const mediaEndedRef = useRef<(() => void) | null>(null);
   const engine = useAudioEngine({
     onMediaEnded: () => {
@@ -41,6 +48,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     play: engine.play,
     clearPlayback: engine.clearPlayback,
     mediaEndedRef,
+    catalogBootstrapEnabled,
   });
   const { amplitude, peak } = useAmplitude(engine.analyserNode, engine.isPlaying);
 

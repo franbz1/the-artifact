@@ -21,6 +21,8 @@ export interface UsePlaybackQueueArgs {
   clearPlayback: () => void;
   /** Wired from `useAudioEngine` so the queue can auto-advance. */
   mediaEndedRef: MutableRefObject<(() => void) | null>;
+  /** When false, defers `GET /api/music` bootstrap until true (e.g. after onboarding). */
+  catalogBootstrapEnabled?: boolean;
 }
 
 export interface PlaybackQueueApi {
@@ -77,6 +79,7 @@ export function usePlaybackQueue({
   play,
   clearPlayback,
   mediaEndedRef,
+  catalogBootstrapEnabled = true,
 }: UsePlaybackQueueArgs): PlaybackQueueApi {
   const playlistRef = useRef(new DoublyLinkedPlaylist());
   const [queueVersion, setQueueVersion] = useState(0);
@@ -364,6 +367,7 @@ export function usePlaybackQueue({
   }, [handleMediaEnded, mediaEndedRef]);
 
   useEffect(() => {
+    if (!catalogBootstrapEnabled) return;
     let cancelled = false;
     (async () => {
       try {
@@ -400,8 +404,8 @@ export function usePlaybackQueue({
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- bootstrap once on mount
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- bootstrap when catalog load is enabled
+  }, [catalogBootstrapEnabled]);
 
   return {
     queueVersion,
