@@ -27,11 +27,18 @@ interface ArtifactMeshProps {
 }
 
 const VISUAL_BUDGET = 1.6;
+const CURSOR_LIGHT_INTENSITY = 0.5;
+const CURSOR_LIGHT_DISTANCE = 3;
+const CURSOR_LIGHT_OFFSET = 0.4;
 
 export function ArtifactMesh({ analyserRef, rawAmpOutRef }: ArtifactMeshProps) {
   const { toggle } = useAudio();
   const meshRef = useRef<THREE.Mesh>(null);
   const materialRef = useRef<THREE.MeshPhysicalMaterial>(null);
+  const cursorLightRef = useRef<THREE.PointLight>(null);
+  const cursorTarget = useRef(new THREE.Vector3(0, 0, 2));
+  const cursorSmoothed = useRef(new THREE.Vector3(0, 0, 2));
+  const smoothedLightIntensity = useRef(0);
   const smoothedAmp = useRef(0);
   const smoothedFitScale = useRef(1);
   const dataArray = useRef<Uint8Array<ArrayBuffer> | null>(null);
@@ -56,6 +63,15 @@ export function ArtifactMesh({ analyserRef, rawAmpOutRef }: ArtifactMeshProps) {
     hoveredRef.current = false;
     if (!isDragging.current) gl.domElement.style.cursor = "";
   }, [gl]);
+
+  const onPointerMove = useCallback((e: ThreeEvent<PointerEvent>) => {
+    if (e.point && e.face && meshRef.current) {
+      const worldNormal = e.face.normal
+        .clone()
+        .transformDirection(meshRef.current.matrixWorld);
+      cursorTarget.current.copy(e.point).addScaledVector(worldNormal, CURSOR_LIGHT_OFFSET);
+    }
+  }, []);
 
   const onPointerDown = useCallback((e: ThreeEvent<PointerEvent>) => {
     isDragging.current = true;
@@ -134,10 +150,20 @@ export function ArtifactMesh({ analyserRef, rawAmpOutRef }: ArtifactMeshProps) {
   useFrame((_, delta) => {
     const mesh = meshRef.current;
     const material = materialRef.current;
+    const cursorLight = cursorLightRef.current;
     if (!mesh) return;
 
     clock.current += delta;
     const t = clock.current;
+
+    cursorSmoothed.current.lerp(cursorTarget.current, 0.12);
+    const intensityTarget = hoveredRef.current ? CURSOR_LIGHT_INTENSITY : 0;
+    smoothedLightIntensity.current +=
+      (intensityTarget - smoothedLightIntensity.current) * 0.1;
+    if (cursorLight) {
+      cursorLight.position.copy(cursorSmoothed.current);
+      cursorLight.intensity = smoothedLightIntensity.current;
+    }
 
     let rawAmp = 0;
     const analyser = analyserRef.current;
@@ -287,25 +313,35 @@ export function ArtifactMesh({ analyserRef, rawAmpOutRef }: ArtifactMeshProps) {
   });
 
   return (
-    <mesh
-      ref={meshRef}
-      geometry={geometry}
-      onPointerOver={onPointerOver}
-      onPointerOut={onPointerOut}
-      onPointerDown={onPointerDown}
-    >
-      <meshPhysicalMaterial
-        ref={materialRef}
-        color={MATERIAL_CONFIG.color}
-        roughness={MATERIAL_CONFIG.roughness}
-        metalness={MATERIAL_CONFIG.metalness}
-        clearcoat={MATERIAL_CONFIG.clearcoat}
-        clearcoatRoughness={MATERIAL_CONFIG.clearcoatRoughness}
-        emissive={MATERIAL_CONFIG.emissiveColor}
-        emissiveIntensity={MATERIAL_CONFIG.emissiveIdle}
-        flatShading={false}
-        side={THREE.FrontSide}
+    <>
+      <pointLight
+        ref={cursorLightRef}
+        color="#c8d4e0"
+        intensity={0}
+        distance={CURSOR_LIGHT_DISTANCE}
+        decay={2}
       />
-    </mesh>
+      <mesh
+        ref={meshRef}
+        geometry={geometry}
+        onPointerOver={onPointerOver}
+        onPointerOut={onPointerOut}
+        onPointerMove={onPointerMove}
+        onPointerDown={onPointerDown}
+      >
+        <meshPhysicalMaterial
+          ref={materialRef}
+          color={MATERIAL_CONFIG.color}
+          roughness={MATERIAL_CONFIG.roughness}
+          metalness={MATERIAL_CONFIG.metalness}
+          clearcoat={MATERIAL_CONFIG.clearcoat}
+          clearcoatRoughness={MATERIAL_CONFIG.clearcoatRoughness}
+          emissive={MATERIAL_CONFIG.emissiveColor}
+          emissiveIntensity={MATERIAL_CONFIG.emissiveIdle}
+          flatShading={false}
+          side={THREE.FrontSide}
+        />
+      </mesh>
+    </>
   );
 }
