@@ -8,7 +8,6 @@ export function createArtifactGeometry(): THREE.BufferGeometry {
     SPHERE_CONFIG.detail,
   );
 
-  // Merge duplicate vertices so shared edges stay connected during displacement
   const geo = mergeVertices(raw);
   geo.computeVertexNormals();
 
