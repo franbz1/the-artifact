@@ -24,6 +24,9 @@ export const AUDIO_CONFIG = {
   amplitudeMax: 1.0,
 } as const;
 
+/** Pointer UX: movement beyond this (px) from pointer-down counts as drag, not click. */
+export const CLICK_VS_DRAG_THRESHOLD_PX = 8;
+
 export const MATERIAL_CONFIG = {
   color: "#080a0f",
   roughness: 0.7,

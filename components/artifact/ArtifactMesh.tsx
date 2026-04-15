@@ -8,7 +8,9 @@ import {
   IDLE_CONFIG,
   AUDIO_CONFIG,
   MATERIAL_CONFIG,
+  CLICK_VS_DRAG_THRESHOLD_PX,
 } from "./artifact.constants";
+import { useAudio } from "@/components/audio/AudioProvider";
 
 interface ArtifactMeshProps {
   analyserRef: RefObject<AnalyserNode | null>;
@@ -20,6 +22,7 @@ const CURSOR_LIGHT_DISTANCE = 3;
 const CURSOR_LIGHT_OFFSET = 0.4;
 
 export function ArtifactMesh({ analyserRef }: ArtifactMeshProps) {
+  const { toggle } = useAudio();
   const meshRef = useRef<THREE.Mesh>(null);
   const materialRef = useRef<THREE.MeshPhysicalMaterial>(null);
   const cursorLightRef = useRef<THREE.PointLight>(null);
@@ -33,17 +36,22 @@ export function ArtifactMesh({ analyserRef }: ArtifactMeshProps) {
   const userQuaternion = useRef(new THREE.Quaternion());
   const isDragging = useRef(false);
   const prevPointer = useRef({ x: 0, y: 0 });
+  const dragStart = useRef({ x: 0, y: 0 });
+  const exceededDragThreshold = useRef(false);
+  const hoveredRef = useRef(false);
   const wobbleEuler = useRef(new THREE.Euler());
   const wobbleQuat = useRef(new THREE.Quaternion());
   const [hovered, setHovered] = useState(false);
   const { gl } = useThree();
 
   const onPointerOver = useCallback(() => {
+    hoveredRef.current = true;
     setHovered(true);
     if (!isDragging.current) gl.domElement.style.cursor = "grab";
   }, [gl]);
 
   const onPointerOut = useCallback(() => {
+    hoveredRef.current = false;
     setHovered(false);
     if (!isDragging.current) gl.domElement.style.cursor = "";
   }, [gl]);
@@ -57,16 +65,27 @@ export function ArtifactMesh({ analyserRef }: ArtifactMeshProps) {
 
   const onPointerDown = useCallback((e: ThreeEvent<PointerEvent>) => {
     isDragging.current = true;
-    prevPointer.current = { x: e.nativeEvent.clientX, y: e.nativeEvent.clientY };
+    exceededDragThreshold.current = false;
+    const x = e.nativeEvent.clientX;
+    const y = e.nativeEvent.clientY;
+    dragStart.current = { x, y };
+    prevPointer.current = { x, y };
     gl.domElement.style.cursor = "grabbing";
     e.stopPropagation();
   }, [gl]);
 
   useEffect(() => {
     const DRAG_SPEED = 0.006;
+    const thresholdSq =
+      CLICK_VS_DRAG_THRESHOLD_PX * CLICK_VS_DRAG_THRESHOLD_PX;
 
     const handlePointerMove = (e: PointerEvent) => {
       if (!isDragging.current) return;
+      const dxFromStart = e.clientX - dragStart.current.x;
+      const dyFromStart = e.clientY - dragStart.current.y;
+      if (dxFromStart * dxFromStart + dyFromStart * dyFromStart > thresholdSq) {
+        exceededDragThreshold.current = true;
+      }
       const dx = e.clientX - prevPointer.current.x;
       const dy = e.clientY - prevPointer.current.y;
       prevPointer.current = { x: e.clientX, y: e.clientY };
@@ -83,7 +102,10 @@ export function ArtifactMesh({ analyserRef }: ArtifactMeshProps) {
     const handlePointerUp = () => {
       if (!isDragging.current) return;
       isDragging.current = false;
-      gl.domElement.style.cursor = "";
+      if (!exceededDragThreshold.current) {
+        void toggle();
+      }
+      gl.domElement.style.cursor = hoveredRef.current ? "grab" : "";
     };
 
     window.addEventListener("pointermove", handlePointerMove);
@@ -92,7 +114,7 @@ export function ArtifactMesh({ analyserRef }: ArtifactMeshProps) {
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
     };
-  }, [gl]);
+  }, [gl, toggle]);
 
   const { geometry, basePositions, directions } = useMemo(() => {
     const geo = createArtifactGeometry();
