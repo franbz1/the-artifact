@@ -13,6 +13,10 @@ import {
   CONTROL_STRIP_LONG_PRESS_MS,
   CONTROL_STRIP_LONG_PRESS_MOVE_PX,
   CONTROL_STRIP_SHELL_WIDTH_REM,
+  CONTROL_STRIP_SKIP_CLICK_MAX_MS,
+  CONTROL_STRIP_SKIP_CLICK_MOVE_TOLERANCE_PX,
+  CONTROL_STRIP_SKIP_HOLD_BEFORE_SEEK_MS,
+  CONTROL_STRIP_SKIP_HOLD_SEEK_INTERVAL_MS,
   CONTROL_STRIP_SKIP_SECONDS,
 } from "./control-strip.constants";
 interface ControlStripProps {
@@ -65,6 +69,129 @@ function GlyphPlayPause({ playing }: { playing: boolean }) {
   );
 }
 
+interface QueueSkipButtonProps {
+  direction: "back" | "forward";
+  isLoaded: boolean;
+  duration: number;
+  currentTime: number;
+  seek: (time: number) => void;
+  skipToPrevious: () => Promise<void>;
+  skipToNext: () => Promise<void>;
+}
+
+function QueueSkipButton({
+  direction,
+  isLoaded,
+  duration,
+  currentTime,
+  seek,
+  skipToPrevious,
+  skipToNext,
+}: QueueSkipButtonProps) {
+  const durationRef = useRef(duration);
+  const currentTimeRef = useRef(currentTime);
+  durationRef.current = duration;
+  currentTimeRef.current = currentTime;
+
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const seekIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const downMetaRef = useRef<{ t: number; x: number; y: number } | null>(null);
+  const holdSeekActiveRef = useRef(false);
+
+  const clearSeekHold = useCallback(() => {
+    if (holdTimerRef.current) {
+      clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
+    }
+    if (seekIntervalRef.current) {
+      clearInterval(seekIntervalRef.current);
+      seekIntervalRef.current = null;
+    }
+  }, []);
+
+  const applyTimeSeek = useCallback(() => {
+    const d = durationRef.current;
+    const t = currentTimeRef.current;
+    if (direction === "back") {
+      seek(Math.max(0, t - CONTROL_STRIP_SKIP_SECONDS));
+    } else {
+      if (!d) return;
+      seek(Math.min(d, t + CONTROL_STRIP_SKIP_SECONDS));
+    }
+  }, [direction, seek]);
+
+  const onPointerDown = useCallback(
+    (e: React.PointerEvent<HTMLButtonElement>) => {
+      if (!isLoaded) return;
+      e.currentTarget.setPointerCapture(e.pointerId);
+      downMetaRef.current = { t: Date.now(), x: e.clientX, y: e.clientY };
+      holdSeekActiveRef.current = false;
+      holdTimerRef.current = setTimeout(() => {
+        holdSeekActiveRef.current = true;
+        applyTimeSeek();
+        seekIntervalRef.current = setInterval(
+          applyTimeSeek,
+          CONTROL_STRIP_SKIP_HOLD_SEEK_INTERVAL_MS,
+        );
+      }, CONTROL_STRIP_SKIP_HOLD_BEFORE_SEEK_MS);
+    },
+    [applyTimeSeek, isLoaded],
+  );
+
+  const endGesture = useCallback(
+    (e: React.PointerEvent<HTMLButtonElement>) => {
+      clearSeekHold();
+      const meta = downMetaRef.current;
+      downMetaRef.current = null;
+      if (holdSeekActiveRef.current) {
+        holdSeekActiveRef.current = false;
+        return;
+      }
+      if (!meta) return;
+      const dt = Date.now() - meta.t;
+      const moved = Math.hypot(e.clientX - meta.x, e.clientY - meta.y);
+      if (
+        dt < CONTROL_STRIP_SKIP_CLICK_MAX_MS &&
+        moved < CONTROL_STRIP_SKIP_CLICK_MOVE_TOLERANCE_PX
+      ) {
+        if (direction === "back") void skipToPrevious();
+        else void skipToNext();
+      }
+    },
+    [clearSeekHold, direction, skipToNext, skipToPrevious],
+  );
+
+  const isBack = direction === "back";
+
+  return (
+    <button
+      type="button"
+      onPointerDown={onPointerDown}
+      onPointerUp={endGesture}
+      onPointerCancel={endGesture}
+      onPointerLeave={(e) => {
+        if (e.buttons === 0) endGesture(e);
+      }}
+      aria-label={
+        isBack
+          ? "Previous track in queue. Hold to seek backward in the track."
+          : "Next track in queue. Hold to seek forward in the track."
+      }
+      title={
+        isBack
+          ? "Previous track (hold: seek back)"
+          : "Next track (hold: seek forward)"
+      }
+      className={cn(
+        "interact-aware cursor-pointer rounded-sm p-1.5 outline-none",
+        "focus-visible:ring-1 focus-visible:ring-lunar/50",
+      )}
+    >
+      <GlyphSkip direction={direction} />
+    </button>
+  );
+}
+
 function GlyphOpen() {
   return (
     <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6 text-membrane-dim">
@@ -93,6 +220,8 @@ export function ControlStrip({ className, onOpenFile }: ControlStripProps) {
     isLoaded,
     currentTime,
     duration,
+    skipToNext,
+    skipToPrevious,
   } = useAudio();
 
   const [secondaryOpen, setSecondaryOpen] = useState(false);
@@ -154,15 +283,6 @@ export function ControlStrip({ className, onOpenFile }: ControlStripProps) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [secondaryOpen]);
-
-  const skipBack = useCallback(() => {
-    seek(Math.max(0, currentTime - CONTROL_STRIP_SKIP_SECONDS));
-  }, [currentTime, seek]);
-
-  const skipForward = useCallback(() => {
-    if (!duration) return;
-    seek(Math.min(duration, currentTime + CONTROL_STRIP_SKIP_SECONDS));
-  }, [currentTime, duration, seek]);
 
   return (
     <div
@@ -259,17 +379,15 @@ export function ControlStrip({ className, onOpenFile }: ControlStripProps) {
                   "group-has-[button:focus-visible]:pointer-events-auto group-has-[button:focus-visible]:opacity-100",
                 )}
               >
-                <button
-                  type="button"
-                  onClick={skipBack}
-                  aria-label="Skip back"
-                  className={cn(
-                    "interact-aware cursor-pointer rounded-sm p-1.5 outline-none",
-                    "focus-visible:ring-1 focus-visible:ring-lunar/50",
-                  )}
-                >
-                  <GlyphSkip direction="back" />
-                </button>
+                <QueueSkipButton
+                  direction="back"
+                  isLoaded={isLoaded}
+                  duration={duration}
+                  currentTime={currentTime}
+                  seek={seek}
+                  skipToPrevious={skipToPrevious}
+                  skipToNext={skipToNext}
+                />
               </div>
 
               <div
@@ -303,17 +421,15 @@ export function ControlStrip({ className, onOpenFile }: ControlStripProps) {
                     "group-has-[button:focus-visible]:pointer-events-auto group-has-[button:focus-visible]:opacity-100",
                   )}
                 >
-                  <button
-                    type="button"
-                    onClick={skipForward}
-                    aria-label="Skip forward"
-                    className={cn(
-                      "interact-aware shrink-0 cursor-pointer rounded-sm p-1.5 outline-none",
-                      "focus-visible:ring-1 focus-visible:ring-lunar/50",
-                    )}
-                  >
-                    <GlyphSkip direction="forward" />
-                  </button>
+                  <QueueSkipButton
+                    direction="forward"
+                    isLoaded={isLoaded}
+                    duration={duration}
+                    currentTime={currentTime}
+                    seek={seek}
+                    skipToPrevious={skipToPrevious}
+                    skipToNext={skipToNext}
+                  />
                 </div>
               </div>
             </div>

@@ -3,21 +3,21 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 
 interface UseDocumentAudioDropOptions {
-  onDropFile: (file: File) => void | Promise<void>;
+  onDropFiles: (files: File[]) => void | Promise<void>;
 }
 
 /**
  * Full-viewport drag-and-drop (listeners on `document`).
  */
-export function useDocumentAudioDrop({ onDropFile }: UseDocumentAudioDropOptions) {
+export function useDocumentAudioDrop({ onDropFiles }: UseDocumentAudioDropOptions) {
   const [isDragOver, setIsDragOver] = useState(false);
   const dragCountRef = useRef(0);
 
-  const onDropFileStable = useCallback(
-    async (file: File) => {
-      await onDropFile(file);
+  const onDropFilesStable = useCallback(
+    async (files: File[]) => {
+      await onDropFiles(files);
     },
-    [onDropFile],
+    [onDropFiles],
   );
 
   useEffect(() => {
@@ -47,9 +47,9 @@ export function useDocumentAudioDrop({ onDropFile }: UseDocumentAudioDropOptions
       dragCountRef.current = 0;
       setIsDragOver(false);
 
-      const file = e.dataTransfer?.files[0];
-      if (file) {
-        void onDropFileStable(file);
+      const dt = e.dataTransfer?.files;
+      if (dt?.length) {
+        void onDropFilesStable(Array.from(dt));
       }
     };
 
@@ -64,7 +64,7 @@ export function useDocumentAudioDrop({ onDropFile }: UseDocumentAudioDropOptions
       document.removeEventListener("dragleave", onDragLeave);
       document.removeEventListener("drop", onDrop);
     };
-  }, [onDropFileStable]);
+  }, [onDropFilesStable]);
 
   return { isDragOver };
 }

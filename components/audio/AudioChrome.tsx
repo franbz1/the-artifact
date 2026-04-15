@@ -11,42 +11,33 @@ import { TrackTitleTrim } from "@/components/player/TrackTitleTrim";
 import { useDocumentAudioDrop } from "@/hooks/useDocumentAudioDrop";
 import { cn } from "@/lib/utils";
 import { useAudio } from "./AudioProvider";
-import { ACCEPTED_INPUT, isAudioFile } from "./audio-file.constants";
+import { ACCEPTED_INPUT } from "./audio-file.constants";
 
 /**
  * Document-level file drop + hidden file input + control strip.
  */
 export function AudioChrome() {
-  const { loadFile, play, fileName, isLoaded } = useAudio();
+  const { addLibraryFiles, fileName, isLoaded } = useAudio();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const loadAndPlay = useCallback(
-    async (file: File) => {
-      await loadFile(file);
-      await play();
+  const onDropFiles = useCallback(
+    (files: File[]) => {
+      addLibraryFiles(files);
     },
-    [loadFile, play],
+    [addLibraryFiles],
   );
 
-  const onDropFile = useCallback(
-    async (file: File) => {
-      if (!isAudioFile(file)) return;
-      await loadAndPlay(file);
-    },
-    [loadAndPlay],
-  );
-
-  const { isDragOver } = useDocumentAudioDrop({ onDropFile });
+  const { isDragOver } = useDocumentAudioDrop({ onDropFiles });
 
   const onFileChange = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (file && isAudioFile(file)) {
-        await loadAndPlay(file);
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files;
+      if (files?.length) {
+        addLibraryFiles(files);
       }
       e.target.value = "";
     },
-    [loadAndPlay],
+    [addLibraryFiles],
   );
 
   const onOpenFile = useCallback(() => {
@@ -67,24 +58,25 @@ export function AudioChrome() {
         ref={fileInputRef}
         type="file"
         accept={ACCEPTED_INPUT}
+        multiple
         onChange={onFileChange}
         className="hidden"
         aria-hidden
       />
 
-      {fileName ? (
-        <div
-          className="pointer-events-none fixed left-4 top-4 z-50 md:left-8 md:top-5"
-          aria-live="polite"
-        >
-          <TrackTitleTrim
-            text={fileName}
-            align="start"
-            maxWidthRem={TRACK_TITLE_CORNER_MAX_REM}
-            className="text-membrane-dim/80"
-          />
-        </div>
-      ) : null}
+      <div
+        className="pointer-events-none fixed left-4 top-4 z-50 md:left-8 md:top-5"
+        aria-live="polite"
+      >
+        <TrackTitleTrim
+          text={fileName ?? "No track"}
+          align="start"
+          maxWidthRem={TRACK_TITLE_CORNER_MAX_REM}
+          className={
+            fileName ? "text-membrane-dim/80" : "text-membrane-dim/55"
+          }
+        />
+      </div>
 
       {isLoaded ? (
         <div

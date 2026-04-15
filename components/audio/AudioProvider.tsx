@@ -3,12 +3,17 @@
 import {
   createContext,
   useContext,
+  useRef,
   type ReactNode,
 } from "react";
 import { useAudioEngine, type AudioEngine } from "@/hooks/useAudioEngine";
 import { useAmplitude } from "@/hooks/useAmplitude";
+import {
+  usePlaybackQueue,
+  type PlaybackQueueApi,
+} from "@/hooks/usePlaybackQueue";
 
-interface AudioContextValue extends AudioEngine {
+interface AudioContextValue extends AudioEngine, PlaybackQueueApi {
   amplitude: number;
   peak: number;
 }
@@ -24,11 +29,25 @@ export function useAudio(): AudioContextValue {
 }
 
 export function AudioProvider({ children }: { children: ReactNode }) {
-  const engine = useAudioEngine();
+  const mediaEndedRef = useRef<(() => void) | null>(null);
+  const engine = useAudioEngine({
+    onMediaEnded: () => {
+      mediaEndedRef.current?.();
+    },
+  });
+  const queue = usePlaybackQueue({
+    loadFile: engine.loadFile,
+    loadUrl: engine.loadUrl,
+    play: engine.play,
+    clearPlayback: engine.clearPlayback,
+    mediaEndedRef,
+  });
   const { amplitude, peak } = useAmplitude(engine.analyserNode, engine.isPlaying);
 
   return (
-    <AudioCtx.Provider value={{ ...engine, amplitude, peak }}>
+    <AudioCtx.Provider
+      value={{ ...engine, ...queue, amplitude, peak }}
+    >
       {children}
     </AudioCtx.Provider>
   );

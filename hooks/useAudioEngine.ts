@@ -16,6 +16,8 @@ export interface AudioEngineState {
 export interface AudioEngineControls {
   play: () => Promise<void>;
   pause: () => void;
+  /** Stops playback, unloads media, clears title — empty player state. */
+  clearPlayback: () => void;
   toggle: () => Promise<void>;
   seek: (time: number) => void;
   setVolume: (volume: number) => void;
@@ -32,9 +34,17 @@ export interface AudioEngineControls {
 
 export type AudioEngine = AudioEngineState & AudioEngineControls;
 
+export interface UseAudioEngineOptions {
+  /** Called after internal `ended` state sync; use for queue auto-advance. */
+  onMediaEnded?: () => void;
+}
+
 const ANALYSER_FFT_SIZE = 2048;
 
-export function useAudioEngine(): AudioEngine {
+export function useAudioEngine(options?: UseAudioEngineOptions): AudioEngine {
+  const onMediaEndedRef = useRef(options?.onMediaEnded);
+  onMediaEndedRef.current = options?.onMediaEnded;
+
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -113,6 +123,7 @@ export function useAudioEngine(): AudioEngine {
     };
     const onEnded = () => {
       setState((prev) => ({ ...prev, isPlaying: false, currentTime: 0 }));
+      onMediaEndedRef.current?.();
     };
     const onVolumeChange = () => {
       if (skipVolumeStateFromImmediateRef.current) return;
@@ -207,6 +218,28 @@ export function useAudioEngine(): AudioEngine {
     [ensureAudioElement, connectSource, waitForCanPlay],
   );
 
+  const clearPlayback = useCallback(() => {
+    const element = ensureAudioElement();
+    element.pause();
+
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
+    }
+
+    element.removeAttribute("src");
+    element.load();
+
+    setState((prev) => ({
+      ...prev,
+      isLoaded: false,
+      fileName: null,
+      currentTime: 0,
+      duration: 0,
+      isPlaying: false,
+    }));
+  }, [ensureAudioElement]);
+
   const loadUrl = useCallback(
     async (url: string) => {
       const element = ensureAudioElement();
@@ -225,10 +258,13 @@ export function useAudioEngine(): AudioEngine {
       element.load();
       await waitForCanPlay(element);
 
+      const rawName = url.split("/").pop() || null;
+      const decodedName = rawName ? decodeURIComponent(rawName) : null;
+
       setState((prev) => ({
         ...prev,
         isLoaded: true,
-        fileName: url.split("/").pop() || null,
+        fileName: decodedName,
         currentTime: 0,
       }));
     },
@@ -236,8 +272,10 @@ export function useAudioEngine(): AudioEngine {
   );
 
   const play = useCallback(async () => {
+    const element = audioElementRef.current;
+    if (!element?.getAttribute("src")) return;
     ensureAudioContext();
-    await audioElementRef.current?.play();
+    await element.play();
   }, [ensureAudioContext]);
 
   const pause = useCallback(() => {
@@ -291,6 +329,7 @@ export function useAudioEngine(): AudioEngine {
     ...state,
     play,
     pause,
+    clearPlayback,
     toggle,
     seek,
     setVolume,

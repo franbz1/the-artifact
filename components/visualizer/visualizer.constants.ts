@@ -142,7 +142,3 @@ export const DUST_LIGHT_CONFIG = {
   gradientColor: "61, 92, 58", // lunar
   gradientOpacity: 0.04,
 } as const;
-
-// -- Default Song --
-
-export const DEFAULT_SONG_URL = "/music/Let's Get Blown.mp3";
