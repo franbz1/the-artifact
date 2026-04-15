@@ -7,6 +7,7 @@ import {
   FIXED_VOLUME_TRACK_HEIGHT_PX,
   TRACK_TITLE_CORNER_MAX_REM,
 } from "@/components/player/control-strip.constants";
+import { ARTIFACT_ZONE_CENTER_Y_CLASS } from "@/components/visualizer/visualizer.constants";
 import { TrackTitleTrim } from "@/components/player/TrackTitleTrim";
 import { useDocumentAudioDrop } from "@/hooks/useDocumentAudioDrop";
 import { cn } from "@/lib/utils";
@@ -84,7 +85,7 @@ export function AudioChrome() {
             "fixed left-4 z-50 md:left-8",
             "pointer-events-auto opacity-0 transition-opacity duration-300 ease-[var(--ease-awareness)]",
             "hover:opacity-100 has-[input:focus-visible]:opacity-100",
-            "top-[calc(env(safe-area-inset-top,0px)+9rem)] md:top-[calc(env(safe-area-inset-top,0px)+9rem)]",
+            ARTIFACT_ZONE_CENTER_Y_CLASS,
           )}
           style={{ height: FIXED_VOLUME_TRACK_HEIGHT_PX }}
         >

@@ -7,7 +7,10 @@ import { Artifact } from "@/components/artifact/Artifact";
 import { WaveCanvas } from "./WaveCanvas";
 import { DustLight } from "./DustLight";
 import { ProgressOverlay } from "./ProgressOverlay";
-import { WAVE_STRIP_BOTTOM_CLASS } from "./visualizer.constants";
+import {
+  ARTIFACT_ZONE_WRAPPER_CLASS,
+  WAVE_STRIP_BOTTOM_CLASS,
+} from "./visualizer.constants";
 
 export function Visualizer() {
   const { analyserNode, isPlaying, currentTime, duration } = useAudio();
@@ -19,8 +22,10 @@ export function Visualizer() {
 
   return (
     <>
-      <div className="-translate-y-20 md:-translate-y-28 flex justify-center">
-        <Artifact />
+      <div className={ARTIFACT_ZONE_WRAPPER_CLASS}>
+        <div className="pointer-events-auto flex justify-center">
+          <Artifact />
+        </div>
       </div>
 
       <WaveCanvas

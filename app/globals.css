@@ -13,17 +13,17 @@
    ------------------------------------------------------------------------- */
 
 @theme {
-  /* --- Foundations: deep warm umber (one notch lighter) --- */
-  --color-void: #181410;
-  --color-void-deep: #13100d;
-  --color-abyss: #15120f;
-  --color-abyss-warm: #181410;
+  /* --- Foundations: deep warm umber --- */
+  --color-void: #14100c;
+  --color-void-deep: #100d0a;
+  --color-abyss: #12100d;
+  --color-abyss-warm: #15110d;
 
   /* --- Structure: carved stone panels --- */
-  --color-stone: #1e1914;
-  --color-stone-light: #261f19;
-  --color-slate: #312a22;
-  --color-slate-violet: #191510;
+  --color-stone: #1a1510;
+  --color-stone-light: #221c16;
+  --color-slate: #2d261e;
+  --color-slate-violet: #16120e;
 
   /* --- Life: accent (lunar = ember/terracotta) --- */
   --color-lunar: #c45c32;
@@ -37,11 +37,11 @@
   --color-teal-deep: #3d2a1f;
 
   /* --- Semantic aliases --- */
-  --color-surface: #15130f;
-  --color-surface-raised: #1c1712;
-  --color-surface-overlay: #221d17;
+  --color-surface: #12100d;
+  --color-surface-raised: #181410;
+  --color-surface-overlay: #1e1a14;
   /* Scrim: dark umber for overlays — not neutral black */
-  --color-scrim: #12100d;
+  --color-scrim: #0f0c09;
   --color-text-primary: #e4dcd0;
   --color-text-secondary: #a89e91;
   --color-text-ghost: rgba(200, 190, 175, 0.42);
@@ -69,11 +69,11 @@
   --radius-eroded: 8px;
 
   /* --- Shadows: warm umbra (brown ink, not black) --- */
-  --shadow-depth: 0 4px 32px rgba(32, 24, 18, 0.44);
-  --shadow-abyss: 0 8px 56px rgba(26, 19, 13, 0.5), 0 2px 16px rgba(36, 26, 18, 0.36);
+  --shadow-depth: 0 4px 32px rgba(28, 20, 14, 0.5);
+  --shadow-abyss: 0 8px 56px rgba(22, 16, 11, 0.55), 0 2px 16px rgba(32, 22, 15, 0.4);
   --shadow-glow-lunar: 0 0 24px rgba(196, 92, 50, 0.2), 0 0 64px rgba(196, 92, 50, 0.1);
   --shadow-glow-membrane: 0 0 20px rgba(228, 220, 208, 0.06);
-  --shadow-inner-stone: inset 0 1px 4px rgba(28, 21, 15, 0.48);
+  --shadow-inner-stone: inset 0 1px 4px rgba(24, 17, 12, 0.55);
 
   /* --- Z-index layers --- */
   --z-void: 0;
@@ -283,9 +283,9 @@ body::after {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 80% 52% at 50% -12%, rgba(210, 125, 85, 0.11) 0%, transparent 55%),
-    radial-gradient(ellipse 62% 46% at 78% 105%, rgba(95, 72, 52, 0.17) 0%, transparent 52%),
-    radial-gradient(ellipse 92% 62% at 18% 42%, rgba(78, 58, 42, 0.11) 0%, transparent 52%),
+    radial-gradient(ellipse 80% 52% at 50% -12%, rgba(200, 110, 65, 0.1) 0%, transparent 55%),
+    radial-gradient(ellipse 62% 46% at 78% 105%, rgba(85, 62, 45, 0.18) 0%, transparent 52%),
+    radial-gradient(ellipse 92% 62% at 18% 42%, rgba(65, 48, 35, 0.12) 0%, transparent 52%),
     linear-gradient(180deg, var(--color-void) 0%, var(--color-abyss) 44%, var(--color-void-deep) 100%);
 }
 
@@ -355,27 +355,27 @@ body::after {
    ------------------------------------------------------------------------- */
 
 .glass-obsidian {
-  background: rgba(26, 22, 17, 0.86);
+  background: rgba(22, 18, 14, 0.88);
   backdrop-filter: blur(28px);
   -webkit-backdrop-filter: blur(28px);
   border: 1px solid rgba(235, 230, 220, 0.07);
   box-shadow:
-    inset 0 1px 0 rgba(255, 248, 240, 0.05),
-    0 4px 32px rgba(30, 22, 16, 0.42);
+    inset 0 1px 0 rgba(255, 248, 240, 0.04),
+    0 4px 32px rgba(26, 18, 12, 0.48);
 }
 
 .glass-deep {
-  background: rgba(22, 18, 14, 0.9);
+  background: rgba(18, 14, 11, 0.92);
   backdrop-filter: blur(40px);
   -webkit-backdrop-filter: blur(40px);
   border: 1px solid rgba(235, 230, 220, 0.05);
   box-shadow:
-    inset 0 1px 0 rgba(255, 248, 240, 0.04),
-    0 8px 56px rgba(26, 19, 13, 0.52);
+    inset 0 1px 0 rgba(255, 248, 240, 0.03),
+    0 8px 56px rgba(22, 15, 10, 0.58);
 }
 
 .glass-membrane {
-  background: rgba(32, 27, 22, 0.7);
+  background: rgba(28, 24, 19, 0.72);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(235, 230, 220, 0.08);

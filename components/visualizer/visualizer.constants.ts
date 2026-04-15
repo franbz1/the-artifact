@@ -57,17 +57,35 @@ export const WAVE_CONFIG = {
 
 /**
  * Wave + seek strip anchor — shared by WaveCanvas and ProgressOverlay.
- * Higher values = more room below for controls (must stay in sync).
+ * Bottom offset is the distance from the viewport bottom; keep ~0.5rem above
+ * CONTROL_STRIP_DOCK_CLASS so the strip clears the controls (must stay in sync).
  */
 export const WAVE_STRIP_BOTTOM_CLASS =
-  "bottom-24 left-0 md:bottom-32" as const;
+  "bottom-[1.5rem] left-0 md:bottom-[1.75rem]" as const;
 
 /**
- * Control cluster: fixed above the viewport bottom, tucked under the wave strip
- * (see WAVE_STRIP_BOTTOM_CLASS — keep ~0.5rem gap between anchors).
+ * Control cluster: fixed near the viewport bottom with modest inset; wave strip
+ * sits ~0.5rem above this anchor (see WAVE_STRIP_BOTTOM_CLASS).
  */
 export const CONTROL_STRIP_DOCK_CLASS =
-  "bottom-[5.5rem] left-0 right-0 md:bottom-[7.5rem]" as const;
+  "bottom-4 left-0 right-0 md:bottom-5" as const;
+
+/**
+ * Fixed column above the wave strip: vertically centers The Artifact so the gap from the
+ * viewport top to the block matches the gap from the block to the wave (same inset values
+ * as WAVE_STRIP_BOTTOM_CLASS + {@link WAVE_CONFIG.height}).
+ *
+ * Note: 148px in class strings must stay equal to WAVE_CONFIG.height (Tailwind static scan).
+ */
+export const ARTIFACT_ZONE_WRAPPER_CLASS =
+  "pointer-events-none fixed inset-x-0 top-0 z-[var(--z-atmosphere)] flex items-center justify-center bottom-[calc(1.5rem+148px)] md:bottom-[calc(1.75rem+148px)]" as const;
+
+/**
+ * Vertical center of the artifact column (volume, sidebar) — matches the midpoint of
+ * {@link ARTIFACT_ZONE_WRAPPER_CLASS}.
+ */
+export const ARTIFACT_ZONE_CENTER_Y_CLASS =
+  "top-[calc((100svh-1.5rem-148px)/2)] -translate-y-1/2 md:top-[calc((100svh-1.75rem-148px)/2)]" as const;
 
 // Frequency bands — each rendered as its own wave, all layered at the same vertical center.
 // binStart/binEnd are fractions of frequencyBinCount (0-1).
@@ -136,18 +154,28 @@ export const DUST_LIGHT_CONFIG = {
   particleMaxOpacity: 0.3,
   opacityCycleSpeed: 0.0008,
   driftStrength: 0.008,
-  audioBoost: 0.07,
+  /** Extra particle speed along beam when music is loud — barely noticeable. */
+  audioBoost: 0.006,
   color: "210, 198, 182",      // dust in light beam (dark chamber)
   colorDim: "165, 155, 138",
   gradientColor: "232, 148, 92", // sunset (lunar-bright)
   /** Core beam opacity (rest scales from this). */
-  gradientOpacity: 0.056,
+  gradientOpacity: 0.048,
   /** Caps the brightest center of the cone gradient. */
-  gradientHotspotMax: 0.36,
+  gradientHotspotMax: 0.32,
   /** Multiplier on radial radius so light reaches farther across the viewport. */
   gradientFalloffRadiusFactor: 1.28,
-  /** Extra full-viewport warm haze so the chamber reads lit edge-to-edge. */
-  ambientWashOpacity: 0.042,
-  /** Added to gradientOpacity when audio amplitude is high. */
-  audioGradientAmp: 0.058,
+  /** Wide ambient wash — kept low so key beam dominates. */
+  ambientWashOpacity: 0.014,
+  /**
+   * Compresses raw analyser amplitude before any audio-linked math.
+   * sqrt tames peaks so loud sections barely push the effect.
+   */
+  audioAmplitudeScale: 0.26,
+  /** Volumetric cone: extra opacity from audio (very small). */
+  audioGradientAmp: 0.0035,
+  /** Wide wash: extra from audio. */
+  audioWashAmp: 0.0008,
+  /** Dust: base opacity lift from audio (very small). */
+  audioParticleOpacityAmp: 0.028,
 } as const;

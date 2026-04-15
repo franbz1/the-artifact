@@ -56,7 +56,7 @@ export const CLICK_VS_DRAG_THRESHOLD_PX = 8;
 
 export const MATERIAL_CONFIG = {
   /** Warm umber-black albedo (not neutral #000 — reads as black in scene light). */
-  color: "#12100d",
+  color: "#0e0c0a",
   roughness: 0.55,
   metalness: 0.92,
   clearcoat: 0.18,

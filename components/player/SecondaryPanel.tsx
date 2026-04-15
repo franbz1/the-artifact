@@ -37,6 +37,7 @@ import {
   SECONDARY_PANEL_TRIGGER_GUTTER_REM,
   SECONDARY_PANEL_TRIGGER_ZONE_VH,
 } from "./secondary-panel.constants";
+import { ARTIFACT_ZONE_CENTER_Y_CLASS } from "@/components/visualizer/visualizer.constants";
 import { createSidebarCollisionDetection } from "./sidebar-dnd-collision";
 
 function isCenterOutsideRect(
@@ -402,7 +403,8 @@ export function SecondaryPanel({ className }: SecondaryPanelProps) {
                 zIndex: LIBRARY_FLOATING_PANEL_Z,
               }}
               className={cn(
-                "pointer-events-auto fixed top-1/2 flex max-h-[min(90vh,36rem)] -translate-y-1/2 flex-col gap-grain overflow-visible",
+                "pointer-events-auto fixed flex max-h-[min(90vh,36rem)] flex-col gap-grain overflow-visible",
+                ARTIFACT_ZONE_CENTER_Y_CLASS,
                 LIBRARY_FLOATING_PANEL_WIDTH_CLASS,
               )}
             >
@@ -433,7 +435,8 @@ export function SecondaryPanel({ className }: SecondaryPanelProps) {
       <div
         ref={triggerRef}
         className={cn(
-          "group/trigger pointer-events-auto absolute top-1/2 right-0 flex -translate-y-1/2 items-center justify-end",
+          "group/trigger pointer-events-auto absolute right-0 flex items-center justify-end",
+          ARTIFACT_ZONE_CENTER_Y_CLASS,
           "motion-reduce:transition-none",
         )}
         style={{

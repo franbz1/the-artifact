@@ -98,8 +98,11 @@ export function DustLight({ className }: DustLightProps) {
       const t = clockRef.current;
       const w = window.innerWidth;
       const h = window.innerHeight;
-      const amp = amplitudeRef.current;
+      const raw = amplitudeRef.current;
       const cfg = DUST_LIGHT_CONFIG;
+      /** Soft-knee amplitude: sqrt dulls peaks so loud music stays a whisper. */
+      const amp =
+        Math.sqrt(Math.min(1, Math.max(0, raw))) * cfg.audioAmplitudeScale;
 
       ctx.clearRect(0, 0, w, h);
 
@@ -117,8 +120,8 @@ export function DustLight({ className }: DustLightProps) {
         h * 0.55,
         maxR * 1.12,
       );
-      const washOp = cfg.ambientWashOpacity + amp * 0.025;
-      wash.addColorStop(0, `rgba(${cfg.gradientColor}, ${Math.min(washOp * 1.2, 0.12)})`);
+      const washOp = cfg.ambientWashOpacity + amp * cfg.audioWashAmp;
+      wash.addColorStop(0, `rgba(${cfg.gradientColor}, ${Math.min(washOp * 1.2, 0.06)})`);
       wash.addColorStop(0.45, `rgba(${cfg.gradientColor}, ${washOp * 0.45})`);
       wash.addColorStop(1, "transparent");
       ctx.fillStyle = wash;
@@ -174,7 +177,9 @@ export function DustLight({ className }: DustLightProps) {
 
         const finalOpacity = Math.min(
           1,
-          cycleOpacity * falloff * (0.72 + amp * 0.45),
+          cycleOpacity *
+            falloff *
+            (0.72 + amp * cfg.audioParticleOpacityAmp),
         );
 
         if (finalOpacity > 0.005) {

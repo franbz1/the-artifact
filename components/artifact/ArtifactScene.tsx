@@ -14,8 +14,9 @@ export function ArtifactScene({ analyserRef }: ArtifactSceneProps) {
 
   return (
     <>
-      <ambientLight intensity={0.15} />
-      <directionalLight position={[-5, -4, -2]} intensity={0.65} color="#e8dfd4" />
+      {/* Ambient kept minimal so form reads from key/fill only (was 0.15). */}
+      <ambientLight intensity={0.03} />
+      <directionalLight position={[-5, -4, -2]} intensity={0.78} color="#e8dfd4" />
       <directionalLight position={[5, 4, 1]} intensity={4.2} color="#e8945c" />
 
       <ArtifactMesh analyserRef={analyserRef} rawAmpOutRef={rawAmpRef} />
