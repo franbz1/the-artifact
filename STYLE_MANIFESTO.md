@@ -17,7 +17,7 @@ The reference world is the subterranean Hive architecture of *Destiny* and the d
 - The silence before something enormous moves
 - The scale of a cathedral seen from below, in near-darkness
 - Organic matter fossilized into architecture — or architecture slowly becoming organic
-- Cold luminescence, like bioluminescence deep underwater or lichen on stone
+- Sunset light through dust — oculus glow in a buried temple, air full of silt
 - Contemplative dread, not horror — the awe of the sublime
 
 ### The player must never evoke:
@@ -25,48 +25,48 @@ The reference world is the subterranean Hive architecture of *Destiny* and the d
 - Neon, glitch, cyberpunk, hologram tropes
 - Busyness, noise, aggressive contrast
 - Generic "futuristic" iconography (circuits, grids, scan lines)
-- Playfulness or warmth — this UI is serene and remote
+- Playful or casual UI — this interface is serene and remote (warm light, not friendly chrome)
 
 ---
 
 ## II. Color System
 
-The palette is derived from three tonal families. Every color has been chosen to feel **discovered, not designed** — as if extracted from mineral, membrane, or void.
+The palette is derived from **Dune-temple** tonal families: warm void, terracotta accent, bone inscription. Token names (`lunar`, `teal-glow`) are historical; values read as ember, sunset, and desert dust.
 
 ### Foundations (backgrounds, voids)
 
 | Token             | Hex       | Usage                              |
 |-------------------|-----------|-------------------------------------|
-| `void`            | `#090c12` | Primary background, deepest dark    |
-| `void-deep`       | `#07080f` | Secondary void, gradient terminus   |
-| `abyss`           | `#0f0d1a` | Surface-level background            |
-| `abyss-warm`      | `#111320` | Warm void variant for depth layers  |
+| `void`            | `#0f0c0a` | Primary background, deepest dark    |
+| `void-deep`       | `#080605` | Secondary void, gradient terminus   |
+| `abyss`           | `#140f0c` | Surface-level background            |
+| `abyss-warm`      | `#1a1410` | Warm void variant for depth layers  |
 
 ### Structure (panels, surfaces, stone)
 
 | Token             | Hex       | Usage                              |
 |-------------------|-----------|-------------------------------------|
-| `stone`           | `#1c1f2e` | Primary panel/card background       |
-| `stone-light`     | `#232840` | Elevated surfaces, hover states     |
-| `slate`           | `#2a2d42` | Secondary structural elements       |
-| `slate-violet`    | `#1e2035` | Violet-shifted structural variant   |
+| `stone`           | `#221c18` | Primary panel/card background       |
+| `stone-light`     | `#2d2620` | Elevated surfaces, hover states     |
+| `slate`           | `#3a322a` | Secondary structural elements       |
+| `slate-violet`    | `#1f1a16` | Deep warm structural variant        |
 
 ### Life (accent, glow, organism signals)
 
 | Token             | Hex       | Usage                              |
 |-------------------|-----------|-------------------------------------|
-| `lunar`           | `#3d5c3a` | Primary accent — cold mossy green   |
-| `lunar-bright`    | `#4a7a45` | Active states, progress indicators  |
-| `lunar-deep`      | `#2e4a2b` | Muted accent for backgrounds        |
-| `membrane`        | `#c8cce8` | Primary text — pale violet-white    |
-| `membrane-dim`    | `#a0a8d0` | Secondary text                      |
-| `teal-glow`       | `#1a3d3a` | Atmospheric teal for ambient light  |
-| `teal-deep`       | `#0d2e2b` | Deep teal for gradient layers       |
+| `lunar`           | `#c45c32` | Primary accent — terracotta / ember |
+| `lunar-bright`    | `#e8945c` | Active states, progress indicators  |
+| `lunar-deep`      | `#8b3d25` | Muted accent for backgrounds        |
+| `membrane`        | `#ebe6dc` | Primary text — bone / ivory         |
+| `membrane-dim`    | `#c9bfb0` | Secondary text                      |
+| `teal-glow`       | `#6b4a32` | Warm dust / ember haze (ambient)    |
+| `teal-deep`       | `#3d2a1f` | Deep warm shadow in gradients       |
 
 ### Rules
 
-- **No pure black** (`#000000`) — always use `void` or `void-deep`
-- **No pure white** (`#ffffff`) — the lightest tone is `membrane` (`#c8cce8`)
+- **No pure black** (`#000000`) for UI chrome — use `void` or `void-deep`. The **3D artifact mesh** intentionally uses near-black albedo so it reads as a black relic in warm light.
+- **No pure white** (`#ffffff`) — the lightest tone is `membrane` (`#ebe6dc`)
 - Gradients are never clean — always slightly noisy, atmospheric
 - All surfaces carry a soft film grain overlay at 3–6% opacity
 
@@ -116,8 +116,8 @@ Standard glassmorphism (bright blur panels, white borders) is **rejected entirel
 
 - Panels are **darker than the background**, not lighter — they absorb light
 - Blur is deep but the surface is near-opaque — you feel depth but don't see through
-- No white or light borders — edges fade to nothing or carry 1px at ≤10% opacity
-- The glass metaphor is **obsidian**: reflective, cold, ancient
+- No bright white borders — edges fade to nothing or carry 1px at ≤10% opacity (bone-tinted)
+- The glass metaphor is **obsidian**: reflective, buried, ancient
 
 ---
 
@@ -166,9 +166,9 @@ This layer is **non-negotiable**. It is what separates the artifact from any oth
 ### Atmospheric Lighting
 
 - `body::after` contains layered radial gradients:
-  - Cold teal glow from above (12% opacity)
-  - Warm abyss from below (40% opacity)
-  - Lateral ambient from the left (15% opacity)
+  - Sunset / oculus glow from above (warm orange-amber)
+  - Deep warm abyss from below
+  - Lateral dust-toned ambient
 - Background is **never flat** — it is a deep gradient that shifts subtly
 
 ### Mood Coloring
@@ -207,7 +207,7 @@ Empty space is not emptiness — **it is atmosphere**. Layout uses asymmetric sp
 
 | Avoid                    | Use Instead                        |
 |--------------------------|------------------------------------|
-| Neon glow                | Cold lunar luminescence            |
+| Neon glow                | Terracotta / sunset spill          |
 | Grid or circuit patterns | Organic, irregular geometry        |
 | Bright glassmorphism     | Dark obsidian translucency         |
 | Springy animations       | Geological, breathing motion       |

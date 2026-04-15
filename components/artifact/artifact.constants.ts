@@ -55,12 +55,13 @@ export const FIT_SCALE_RESPONSE = 0.08;
 export const CLICK_VS_DRAG_THRESHOLD_PX = 8;
 
 export const MATERIAL_CONFIG = {
-  color: "#080a0f",
+  /** Warm umber-black albedo (not neutral #000 — reads as black in scene light). */
+  color: "#12100d",
   roughness: 0.55,
   metalness: 0.92,
   clearcoat: 0.18,
   clearcoatRoughness: 0.6,
-  emissiveColor: "#1a2e1a",
+  emissiveColor: "#c45c32",
   emissiveIdle: 0.0,
-  emissivePeak: 0.3,
+  emissivePeak: 0.009,
 } as const;

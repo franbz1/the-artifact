@@ -310,7 +310,7 @@ export function ControlStrip({ className, onOpenFile }: ControlStripProps) {
         >
           {isLoaded && secondaryOpen && (
             <div
-              className="absolute bottom-full left-8 z-20 mb-2 flex gap-6 border border-border-faint bg-void/90 px-4 py-3 shadow-depth backdrop-blur-md transition-[opacity,filter] duration-500 ease-[var(--ease-dissolve)] md:left-12"
+              className="absolute bottom-full left-8 z-20 mb-2 flex gap-6 border border-border-faint bg-surface-overlay/95 px-4 py-3 shadow-depth backdrop-blur-md transition-[opacity,filter] duration-500 ease-[var(--ease-dissolve)] md:left-12"
               aria-live="polite"
               role="group"
               aria-label="Additional playback options"

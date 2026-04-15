@@ -7,8 +7,8 @@ export const PROGRESS_CONFIG = {
   playedFillMultiplier: 2.0,
   /** Blend factor toward lunar RGB for played stroke/fill (0 = band color only). */
   lunarTintBlend: 0.35,
-  /** Lunar accent — matches --color-lunar */
-  lunarRgb: "61, 92, 58",
+  /** Accent tint — matches --color-lunar (terracotta) */
+  lunarRgb: "196, 92, 50",
 } as const;
 
 /** Seek handle on the progress strip (DOM overlay, not canvas). */
@@ -76,7 +76,7 @@ export const FREQUENCY_BANDS = [
     name: "sub-bass",
     binStart: 0,
     binEnd: 0.012,       // ~0-250 Hz
-    color: "46, 74, 43",        // lunar-deep
+    color: "139, 61, 37",        // lunar-deep
     opacity: 0.6,
     fillOpacity: 0.08,
     lineWidth: 2.4,
@@ -88,7 +88,7 @@ export const FREQUENCY_BANDS = [
     name: "low-mid",
     binStart: 0.012,
     binEnd: 0.09,         // ~250-2000 Hz
-    color: "61, 92, 58",        // lunar
+    color: "196, 92, 50",        // lunar
     opacity: 0.48,
     fillOpacity: 0.06,
     lineWidth: 1.6,
@@ -100,7 +100,7 @@ export const FREQUENCY_BANDS = [
     name: "high-mid",
     binStart: 0.09,
     binEnd: 0.28,         // ~2000-6000 Hz
-    color: "26, 61, 58",        // teal-glow
+    color: "107, 74, 50",        // teal-glow (ember dust)
     opacity: 0.38,
     fillOpacity: 0.04,
     lineWidth: 1.0,
@@ -112,7 +112,7 @@ export const FREQUENCY_BANDS = [
     name: "highs",
     binStart: 0.28,
     binEnd: 0.9,          // ~6000-20000 Hz
-    color: "160, 168, 208",     // membrane-dim
+    color: "185, 175, 160",     // soft bone (visible on dark void)
     opacity: 0.28,
     fillOpacity: 0.03,
     lineWidth: 0.6,
@@ -125,20 +125,29 @@ export const FREQUENCY_BANDS = [
 // -- Dust Light (upper-right corner light beam with floating dust) --
 
 export const DUST_LIGHT_CONFIG = {
-  particleCount: 25,
+  particleCount: 42,
   beamAngle: -2.2,
-  beamSpread: 0.5,
-  particleMinRadius: 0.6,
-  particleMaxRadius: 2.0,
+  beamSpread: 0.55,
+  particleMinRadius: 0.65,
+  particleMaxRadius: 2.35,
   particleMinSpeed: 0.08,
-  particleMaxSpeed: 0.3,
-  particleMinOpacity: 0.03,
-  particleMaxOpacity: 0.18,
+  particleMaxSpeed: 0.32,
+  particleMinOpacity: 0.055,
+  particleMaxOpacity: 0.3,
   opacityCycleSpeed: 0.0008,
   driftStrength: 0.008,
-  audioBoost: 0.06,
-  color: "200, 204, 232",      // membrane
-  colorDim: "160, 168, 208",   // membrane-dim
-  gradientColor: "61, 92, 58", // lunar
-  gradientOpacity: 0.04,
+  audioBoost: 0.07,
+  color: "210, 198, 182",      // dust in light beam (dark chamber)
+  colorDim: "165, 155, 138",
+  gradientColor: "232, 148, 92", // sunset (lunar-bright)
+  /** Core beam opacity (rest scales from this). */
+  gradientOpacity: 0.056,
+  /** Caps the brightest center of the cone gradient. */
+  gradientHotspotMax: 0.36,
+  /** Multiplier on radial radius so light reaches farther across the viewport. */
+  gradientFalloffRadiusFactor: 1.28,
+  /** Extra full-viewport warm haze so the chamber reads lit edge-to-edge. */
+  ambientWashOpacity: 0.042,
+  /** Added to gradientOpacity when audio amplitude is high. */
+  audioGradientAmp: 0.058,
 } as const;

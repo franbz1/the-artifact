@@ -40,7 +40,7 @@ export function LibraryRemoveConfirmDialog({
           ? { duration: 0.12, ease: EASE_DISSOLVE }
           : { duration: 0.35, ease: EASE_DISSOLVE }
       }
-      className="pointer-events-auto fixed inset-0 z-[100] flex items-center justify-center bg-void/75 px-breath py-breath backdrop-blur-[2px]"
+      className="pointer-events-auto fixed inset-0 z-[100] flex items-center justify-center bg-scrim/45 px-breath py-breath backdrop-blur-[2px]"
       onPointerDown={(e) => {
         if (e.target === e.currentTarget) onCancel();
       }}

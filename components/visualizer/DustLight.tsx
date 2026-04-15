@@ -32,7 +32,7 @@ function createMote(width: number, height: number): DustMote {
     angle,
     opacityPhase: Math.random() * Math.PI * 2,
     opacitySpeed: cfg.opacityCycleSpeed * (0.6 + Math.random() * 0.8),
-    bright: Math.random() < 0.3,
+    bright: Math.random() < 0.38,
   };
 }
 
@@ -46,7 +46,7 @@ function respawnMote(mote: DustMote, width: number, height: number) {
   mote.y = originY + (Math.random() - 0.5) * 100;
   mote.speed = cfg.particleMinSpeed + Math.random() * (cfg.particleMaxSpeed - cfg.particleMinSpeed);
   mote.radius = cfg.particleMinRadius + Math.random() * (cfg.particleMaxRadius - cfg.particleMinRadius);
-  mote.bright = Math.random() < 0.3;
+  mote.bright = Math.random() < 0.38;
 }
 
 interface DustLightProps {
@@ -103,16 +103,44 @@ export function DustLight({ className }: DustLightProps) {
 
       ctx.clearRect(0, 0, w, h);
 
+      const maxR = Math.max(w, h);
+      const falloffR = maxR * 0.9 * cfg.gradientFalloffRadiusFactor;
+      const audioGradBoost = amp * cfg.audioGradientAmp;
+      const baseGlowOpacity = cfg.gradientOpacity + audioGradBoost;
+
+      // Wide ambient wash — visible across the full viewport
+      const wash = ctx.createRadialGradient(
+        w * 0.52,
+        h * 0.38,
+        0,
+        w * 0.5,
+        h * 0.55,
+        maxR * 1.12,
+      );
+      const washOp = cfg.ambientWashOpacity + amp * 0.025;
+      wash.addColorStop(0, `rgba(${cfg.gradientColor}, ${Math.min(washOp * 1.2, 0.12)})`);
+      wash.addColorStop(0.45, `rgba(${cfg.gradientColor}, ${washOp * 0.45})`);
+      wash.addColorStop(1, "transparent");
+      ctx.fillStyle = wash;
+      ctx.fillRect(0, 0, w, h);
+
       // Volumetric light cone from upper-right
       const grad = ctx.createRadialGradient(
-        w + 60, -60, 0,
-        w * 0.4, h * 0.5, Math.max(w, h) * 0.9,
+        w + 60,
+        -60,
+        0,
+        w * 0.4,
+        h * 0.5,
+        falloffR,
       );
-      const baseGlowOpacity = cfg.gradientOpacity + amp * 0.03;
-      grad.addColorStop(0, `rgba(${cfg.gradientColor}, ${Math.min(baseGlowOpacity * 3, 0.18)})`);
-      grad.addColorStop(0.3, `rgba(${cfg.gradientColor}, ${baseGlowOpacity})`);
-      grad.addColorStop(0.7, `rgba(${cfg.gradientColor}, ${baseGlowOpacity * 0.3})`);
-      grad.addColorStop(1, "rgba(0, 0, 0, 0)");
+      const hotspotCap = cfg.gradientHotspotMax;
+      grad.addColorStop(
+        0,
+        `rgba(${cfg.gradientColor}, ${Math.min(baseGlowOpacity * 3, hotspotCap)})`,
+      );
+      grad.addColorStop(0.28, `rgba(${cfg.gradientColor}, ${baseGlowOpacity})`);
+      grad.addColorStop(0.65, `rgba(${cfg.gradientColor}, ${baseGlowOpacity * 0.42})`);
+      grad.addColorStop(1, "transparent");
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, w, h);
 
@@ -144,7 +172,10 @@ export function DustLight({ className }: DustLightProps) {
           (cfg.particleMaxOpacity - cfg.particleMinOpacity) *
             (0.5 + 0.5 * Math.sin(t * mote.opacitySpeed + mote.opacityPhase));
 
-        const finalOpacity = cycleOpacity * falloff * (0.6 + amp * 0.4);
+        const finalOpacity = Math.min(
+          1,
+          cycleOpacity * falloff * (0.72 + amp * 0.45),
+        );
 
         if (finalOpacity > 0.005) {
           const color = mote.bright ? cfg.color : cfg.colorDim;

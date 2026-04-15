@@ -15,18 +15,14 @@ export function ArtifactScene({ analyserRef }: ArtifactSceneProps) {
   return (
     <>
       <ambientLight intensity={0.15} />
-      <directionalLight position={[-5, -4, -2]} intensity={0.6} color="#d0d4f0" />
-      <directionalLight position={[5, 4, 1]} intensity={5} color="#3d5c3a" />
+      <directionalLight position={[-5, -4, -2]} intensity={0.65} color="#e8dfd4" />
+      <directionalLight position={[5, 4, 1]} intensity={4.2} color="#e8945c" />
 
       <ArtifactMesh analyserRef={analyserRef} rawAmpOutRef={rawAmpRef} />
       <ArtifactCameraZoom rawAmpInRef={rawAmpRef} />
 
       <EffectComposer multisampling={0}>
-        <Bloom
-          luminanceThreshold={0.12}
-          intensity={0.7}
-          luminanceSmoothing={0.6}
-        />
+        <Bloom luminanceThreshold={0.2} intensity={0.38} luminanceSmoothing={0.55} />
       </EffectComposer>
     </>
   );

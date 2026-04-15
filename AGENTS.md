@@ -159,7 +159,7 @@ const breatheVariants = {
 // Awareness (hover response)
 const awareHover = {
   whileHover: {
-    borderColor: "rgba(200, 204, 232, 0.12)",
+    borderColor: "rgba(235, 230, 220, 0.12)",
     transition: { duration: 0.3, ease: [0.16, 0, 0.12, 1] }
   }
 };
