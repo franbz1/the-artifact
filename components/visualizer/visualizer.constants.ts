@@ -130,7 +130,7 @@ export const FREQUENCY_BANDS = [
     name: "highs",
     binStart: 0.28,
     binEnd: 0.9,          // ~6000-20000 Hz
-    color: "185, 175, 160",     // soft bone (visible on dark void)
+    color: "112, 98, 86",       // warm umber line (readable on parchment)
     opacity: 0.28,
     fillOpacity: 0.03,
     lineWidth: 0.6,
@@ -156,17 +156,17 @@ export const DUST_LIGHT_CONFIG = {
   driftStrength: 0.008,
   /** Extra particle speed along beam when music is loud — barely noticeable. */
   audioBoost: 0.006,
-  color: "210, 198, 182",      // dust in light beam (dark chamber)
-  colorDim: "165, 155, 138",
+  color: "148, 134, 118",      // dust motes (visible on sunlit wall)
+  colorDim: "118, 108, 96",
   gradientColor: "232, 148, 92", // sunset (lunar-bright)
   /** Core beam opacity (rest scales from this). */
-  gradientOpacity: 0.048,
+  gradientOpacity: 0.092,
   /** Caps the brightest center of the cone gradient. */
-  gradientHotspotMax: 0.32,
+  gradientHotspotMax: 0.44,
   /** Multiplier on radial radius so light reaches farther across the viewport. */
   gradientFalloffRadiusFactor: 1.28,
-  /** Wide ambient wash — kept low so key beam dominates. */
-  ambientWashOpacity: 0.014,
+  /** Wide ambient wash — stronger on light parchment so the beam reads clearly. */
+  ambientWashOpacity: 0.034,
   /**
    * Compresses raw analyser amplitude before any audio-linked math.
    * sqrt tames peaks so loud sections barely push the effect.

@@ -18,6 +18,7 @@ import {
   PERF_CONFIG,
   FIT_SCALE_RESPONSE,
   CLICK_VS_DRAG_THRESHOLD_PX,
+  CURSOR_LIGHT_COLOR,
 } from "./artifact.constants";
 import { useAudio } from "@/components/audio/AudioProvider";
 
@@ -316,7 +317,7 @@ export function ArtifactMesh({ analyserRef, rawAmpOutRef }: ArtifactMeshProps) {
     <>
       <pointLight
         ref={cursorLightRef}
-        color="#c8d4e0"
+        color={CURSOR_LIGHT_COLOR}
         intensity={0}
         distance={CURSOR_LIGHT_DISTANCE}
         decay={2}

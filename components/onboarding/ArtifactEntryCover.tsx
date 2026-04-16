@@ -36,7 +36,7 @@ export function ArtifactEntryCover({
       >
         <h1
           id="artifact-entry-title"
-          className="font-serif text-2xl font-semibold tracking-tight text-membrane"
+          className="font-serif text-2xl font-semibold tracking-tight text-heading"
         >
           The Artifact
         </h1>
@@ -66,7 +66,7 @@ export function ArtifactEntryCover({
 
         {isMobileViewport ? (
           <div
-            className="mt-breath border border-lunar/25 bg-void-deep/80 px-grain py-grain font-sans text-sm leading-relaxed text-membrane"
+            className="mt-breath border border-lunar/25 bg-stone px-grain py-grain font-sans text-sm leading-relaxed text-membrane"
             role="status"
           >
             <strong className="font-medium text-lunar-bright">Desktop only.</strong>{" "}

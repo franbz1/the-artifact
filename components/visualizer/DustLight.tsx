@@ -121,8 +121,8 @@ export function DustLight({ className }: DustLightProps) {
         maxR * 1.12,
       );
       const washOp = cfg.ambientWashOpacity + amp * cfg.audioWashAmp;
-      wash.addColorStop(0, `rgba(${cfg.gradientColor}, ${Math.min(washOp * 1.2, 0.06)})`);
-      wash.addColorStop(0.45, `rgba(${cfg.gradientColor}, ${washOp * 0.45})`);
+      wash.addColorStop(0, `rgba(${cfg.gradientColor}, ${Math.min(washOp * 1.35, 0.14)})`);
+      wash.addColorStop(0.45, `rgba(${cfg.gradientColor}, ${washOp * 0.52})`);
       wash.addColorStop(1, "transparent");
       ctx.fillStyle = wash;
       ctx.fillRect(0, 0, w, h);

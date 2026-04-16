@@ -22,7 +22,7 @@ export function ArtifactScene({ analyserRef }: ArtifactSceneProps) {
       <ArtifactMesh analyserRef={analyserRef} rawAmpOutRef={rawAmpRef} />
       <ArtifactCameraZoom rawAmpInRef={rawAmpRef} />
 
-      <EffectComposer multisampling={0}>
+      <EffectComposer multisampling={3}>
         <Bloom luminanceThreshold={0.2} intensity={0.38} luminanceSmoothing={0.55} />
       </EffectComposer>
     </>

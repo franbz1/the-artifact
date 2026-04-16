@@ -24,11 +24,18 @@ export function ArtifactCameraZoom({ rawAmpInRef }: ArtifactCameraZoomProps) {
     const down = CAMERA_ZOOM_CONFIG.smoothingDown;
     const idle = CAMERA_ZOOM_CONFIG.idleRetreat;
 
+    const zoomTarget = Math.min(
+      1,
+      Math.max(0, raw) ** CAMERA_ZOOM_CONFIG.zoomDrivePower,
+    );
+
     if (!isPlaying) {
       zoomLevelRef.current = zr + (0 - zr) * idle;
     } else {
       zoomLevelRef.current =
-        raw > zr ? zr + (raw - zr) * up : zr + (raw - zr) * down;
+        zoomTarget > zr
+          ? zr + (zoomTarget - zr) * up
+          : zr + (zoomTarget - zr) * down;
     }
 
     const level = zoomLevelRef.current;

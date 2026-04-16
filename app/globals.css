@@ -3,53 +3,55 @@
 /* =========================================================================
    THE ARTIFACT — Design System
    A relic interface: brutalist architecture meets living organism.
-   Dune temple: deep umber chamber (no pure black — warm mineral darks).
+   Sunlit chamber: warm parchment void, terracotta accent, chiseled umber type.
    ========================================================================= */
 
 /* -------------------------------------------------------------------------
    THEME: Color Palette
-   Darkest tones are chocolate/umber (#RGB never 0,0,0 — always warm bias).
-   Terracotta ember, pale membrane text. Shadows use umbra brown, not #000.
+   Foundations are warm paper / sand (never pure #fff). Type is umber/chocolate.
+   Terracotta accent unchanged in hue. Shadows stay warm, soft on light ground.
    ------------------------------------------------------------------------- */
 
 @theme {
-  /* --- Foundations: deep warm umber --- */
-  --color-void: #14100c;
-  --color-void-deep: #100d0a;
-  --color-abyss: #12100d;
-  --color-abyss-warm: #15110d;
+  /* --- Foundations: sunlit parchment / dust in the air --- */
+  --color-void: #f4f0e8;
+  --color-void-deep: #e8e2d6;
+  --color-abyss: #efe9e0;
+  --color-abyss-warm: #f7f3eb;
 
-  /* --- Structure: carved stone panels --- */
-  --color-stone: #1a1510;
-  --color-stone-light: #221c16;
-  --color-slate: #2d261e;
-  --color-slate-violet: #16120e;
+  /* --- Structure: carved plaster & pale stone --- */
+  --color-stone: #e4dcd0;
+  --color-stone-light: #ebe4d8;
+  --color-slate: #d4cbc0;
+  --color-slate-violet: #ddd6cc;
 
   /* --- Life: accent (lunar = ember/terracotta) --- */
   --color-lunar: #c45c32;
   --color-lunar-bright: #e8945c;
   --color-lunar-deep: #8b3d25;
-  /* membrane = light carved text on dark stone */
-  --color-membrane: #e4dcd0;
-  --color-membrane-dim: #a89e91;
+  /* membrane = primary UI type (dark on light — carved, not pure black) */
+  --color-membrane: #231c16;
+  --color-membrane-dim: #6b6258;
+  /* Titles / wordmark: maximum legibility against parchment */
+  --color-heading: #0f0c09;
   /* teal-* keys: ember haze (names unchanged) */
-  --color-teal-glow: #6b4a32;
-  --color-teal-deep: #3d2a1f;
+  --color-teal-glow: #8a6e58;
+  --color-teal-deep: #5c4a3d;
 
   /* --- Semantic aliases --- */
-  --color-surface: #12100d;
-  --color-surface-raised: #181410;
-  --color-surface-overlay: #1e1a14;
-  /* Scrim: dark umber for overlays — not neutral black */
-  --color-scrim: #0f0c09;
-  --color-text-primary: #e4dcd0;
-  --color-text-secondary: #a89e91;
-  --color-text-ghost: rgba(200, 190, 175, 0.42);
-  --color-text-inscription: rgba(180, 170, 155, 0.28);
+  --color-surface: #ece7de;
+  --color-surface-raised: #f3efe8;
+  --color-surface-overlay: #e6e0d5;
+  /* Scrim: dark umber for overlays — dims the light chamber */
+  --color-scrim: #14100c;
+  --color-text-primary: #231c16;
+  --color-text-secondary: #6b6258;
+  --color-text-ghost: rgba(38, 32, 26, 0.42);
+  --color-text-inscription: rgba(44, 38, 32, 0.3);
   --color-accent: #c45c32;
   --color-accent-glow: #e8945c;
-  --color-border: rgba(235, 230, 220, 0.08);
-  --color-border-faint: rgba(235, 230, 220, 0.04);
+  --color-border: rgba(42, 34, 26, 0.1);
+  --color-border-faint: rgba(42, 34, 26, 0.055);
 
   /* --- Typography --- */
   --font-serif: "Cormorant Garamond", "Cormorant", "Georgia", serif;
@@ -68,12 +70,12 @@
   --radius-worn: 4px;
   --radius-eroded: 8px;
 
-  /* --- Shadows: warm umbra (brown ink, not black) --- */
-  --shadow-depth: 0 4px 32px rgba(28, 20, 14, 0.5);
-  --shadow-abyss: 0 8px 56px rgba(22, 16, 11, 0.55), 0 2px 16px rgba(32, 22, 15, 0.4);
-  --shadow-glow-lunar: 0 0 24px rgba(196, 92, 50, 0.2), 0 0 64px rgba(196, 92, 50, 0.1);
-  --shadow-glow-membrane: 0 0 20px rgba(228, 220, 208, 0.06);
-  --shadow-inner-stone: inset 0 1px 4px rgba(24, 17, 12, 0.55);
+  /* --- Shadows: warm umbra, soft on light ground --- */
+  --shadow-depth: 0 4px 28px rgba(42, 32, 24, 0.1);
+  --shadow-abyss: 0 8px 48px rgba(38, 28, 20, 0.11), 0 2px 14px rgba(48, 36, 26, 0.08);
+  --shadow-glow-lunar: 0 0 24px rgba(196, 92, 50, 0.22), 0 0 64px rgba(196, 92, 50, 0.12);
+  --shadow-glow-membrane: 0 0 18px rgba(24, 18, 14, 0.05);
+  --shadow-inner-stone: inset 0 1px 4px rgba(60, 48, 38, 0.07);
 
   /* --- Z-index layers --- */
   --z-void: 0;
@@ -219,7 +221,7 @@
 
 /* -------------------------------------------------------------------------
    BASE LAYER
-   Deep void, textured, alive at the edges.
+   Parchment ground, textured, alive at the edges.
    ------------------------------------------------------------------------- */
 
 *,
@@ -231,12 +233,12 @@
 }
 
 ::selection {
-  background: rgba(196, 92, 50, 0.38);
-  color: var(--color-membrane);
+  background: rgba(196, 92, 50, 0.28);
+  color: var(--color-heading);
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: light;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -265,7 +267,7 @@ body::before {
   inset: 0;
   z-index: 100;
   pointer-events: none;
-  opacity: 0.04;
+  opacity: 0.028;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: 256px 256px;
@@ -273,7 +275,7 @@ body::before {
 
 /* -------------------------------------------------------------------------
    ATMOSPHERIC BACKGROUND
-   Layered umber + oculus warmth — depth comes from hue, not #000.
+   Sunlit oculus warmth + floor shadow — depth from umber, not gray.
    ------------------------------------------------------------------------- */
 
 body::after {
@@ -283,10 +285,10 @@ body::after {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 80% 52% at 50% -12%, rgba(200, 110, 65, 0.1) 0%, transparent 55%),
-    radial-gradient(ellipse 62% 46% at 78% 105%, rgba(85, 62, 45, 0.18) 0%, transparent 52%),
-    radial-gradient(ellipse 92% 62% at 18% 42%, rgba(65, 48, 35, 0.12) 0%, transparent 52%),
-    linear-gradient(180deg, var(--color-void) 0%, var(--color-abyss) 44%, var(--color-void-deep) 100%);
+    radial-gradient(ellipse 78% 50% at 50% -14%, rgba(220, 130, 80, 0.26) 0%, transparent 58%),
+    radial-gradient(ellipse 58% 44% at 82% 108%, rgba(120, 92, 68, 0.14) 0%, transparent 54%),
+    radial-gradient(ellipse 90% 58% at 16% 40%, rgba(100, 78, 58, 0.1) 0%, transparent 54%),
+    linear-gradient(180deg, var(--color-abyss-warm) 0%, var(--color-void) 38%, var(--color-void-deep) 100%);
 }
 
 /* -------------------------------------------------------------------------
@@ -304,18 +306,18 @@ body::after {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(90, 82, 72, 0.45);
+  background: rgba(100, 90, 80, 0.38);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(120, 110, 98, 0.55);
+  background: rgba(72, 64, 56, 0.48);
 }
 
 /* Firefox */
 @supports (scrollbar-color: auto) {
   * {
-    scrollbar-color: rgba(90, 82, 72, 0.45) transparent;
+    scrollbar-color: rgba(100, 90, 80, 0.38) transparent;
     scrollbar-width: thin;
   }
 }
@@ -330,7 +332,7 @@ body::after {
   font-weight: 600;
   letter-spacing: -0.01em;
   line-height: 1.1;
-  color: var(--color-membrane);
+  color: var(--color-heading);
 }
 
 .text-inscription {
@@ -351,34 +353,34 @@ body::after {
 }
 
 /* -------------------------------------------------------------------------
-   OBSIDIAN GLASS — dark chamber, faint bone edge light
+   OBSIDIAN GLASS — frosted plaster, warm edge shadow
    ------------------------------------------------------------------------- */
 
 .glass-obsidian {
-  background: rgba(22, 18, 14, 0.88);
+  background: rgba(252, 250, 247, 0.82);
   backdrop-filter: blur(28px);
   -webkit-backdrop-filter: blur(28px);
-  border: 1px solid rgba(235, 230, 220, 0.07);
+  border: 1px solid rgba(42, 34, 26, 0.09);
   box-shadow:
-    inset 0 1px 0 rgba(255, 248, 240, 0.04),
-    0 4px 32px rgba(26, 18, 12, 0.48);
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    0 4px 28px rgba(42, 32, 24, 0.1);
 }
 
 .glass-deep {
-  background: rgba(18, 14, 11, 0.92);
+  background: rgba(250, 247, 242, 0.9);
   backdrop-filter: blur(40px);
   -webkit-backdrop-filter: blur(40px);
-  border: 1px solid rgba(235, 230, 220, 0.05);
+  border: 1px solid rgba(42, 34, 26, 0.08);
   box-shadow:
-    inset 0 1px 0 rgba(255, 248, 240, 0.03),
-    0 8px 56px rgba(22, 15, 10, 0.58);
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    0 8px 44px rgba(38, 28, 20, 0.11);
 }
 
 .glass-membrane {
-  background: rgba(28, 24, 19, 0.72);
+  background: rgba(255, 253, 250, 0.72);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(235, 230, 220, 0.08);
+  border: 1px solid rgba(42, 34, 26, 0.08);
 }
 
 /* -------------------------------------------------------------------------
@@ -421,7 +423,10 @@ body::after {
 }
 
 .glow-accent {
-  text-shadow: 0 0 14px rgba(196, 92, 50, 0.35), 0 0 40px rgba(232, 148, 92, 0.15);
+  text-shadow:
+    0 0 12px rgba(196, 92, 50, 0.22),
+    0 0 32px rgba(232, 148, 92, 0.12),
+    0 1px 0 rgba(255, 252, 248, 0.4);
 }
 
 /* -------------------------------------------------------------------------
@@ -440,7 +445,7 @@ body::after {
 }
 
 .interact-aware:hover {
-  border-color: rgba(235, 230, 220, 0.12);
+  border-color: rgba(42, 34, 26, 0.14);
 }
 
 /* -------------------------------------------------------------------------
@@ -460,7 +465,7 @@ body::after {
   border-radius: inherit;
   background: radial-gradient(
     ellipse 120% 80% at 50% 30%,
-    var(--mood-color, rgba(107, 74, 50, 0.12)) 0%,
+    var(--mood-color, rgba(138, 110, 88, 0.14)) 0%,
     transparent 70%
   );
   opacity: 0.5;

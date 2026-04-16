@@ -44,15 +44,24 @@ export const AUDIO_CONFIG = {
 export const CAMERA_ZOOM_CONFIG = {
   baseDistance: 4.0,
   zoomInAmount: 0.85,
-  smoothingUp: 0.52,
+  /** How fast zoom level chases rising loudness (lower = more gradual “steps”). */
+  smoothingUp: 0.38,
   smoothingDown: 0.14,
   response: 0.26,
   idleRetreat: 0.12,
+  /**
+   * Zoom drive = raw^power (raw ∈ [0,1] from analyser). Higher values reserve most of the
+   * zoom range for peaks: e.g. power 3.5 → ~46% drive at raw 0.8, only ~1.0 at raw 1.0.
+   */
+  zoomDrivePower: 3.5,
 } as const;
 
 export const FIT_SCALE_RESPONSE = 0.08;
 
 export const CLICK_VS_DRAG_THRESHOLD_PX = 8;
+
+/** Cursor-follow point light — same hue as ambient lunar-bright (`--color-lunar-bright`). */
+export const CURSOR_LIGHT_COLOR = "#e8945c" as const;
 
 export const MATERIAL_CONFIG = {
   /** Warm umber-black albedo (not neutral #000 — reads as black in scene light). */
