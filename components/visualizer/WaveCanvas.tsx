@@ -16,6 +16,8 @@ interface WaveCanvasProps {
   progressRef: MutableRefObject<number>;
   /** Strip element that hosts the seek handle — receives deepest fill-bottom Y each frame. */
   progressStripRef?: RefObject<HTMLElement | null>;
+  /** Skip half the rAF draws when true (e.g. sidebar open over the canvas). */
+  reduceGpuLoad?: boolean;
   className?: string;
 }
 
@@ -115,6 +117,7 @@ export function WaveCanvas({
   waveformRefs,
   progressRef,
   progressStripRef,
+  reduceGpuLoad = false,
   className,
 }: WaveCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -122,6 +125,9 @@ export function WaveCanvas({
   const clockRef = useRef(0);
   const bandBuffersRef = useRef<BandBuffers | null>(null);
   const sizeRef = useRef({ w: 0, h: 0 });
+  const reduceGpuLoadRef = useRef(reduceGpuLoad);
+  const skipFrameToggleRef = useRef(false);
+  reduceGpuLoadRef.current = reduceGpuLoad;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -149,6 +155,14 @@ export function WaveCanvas({
     window.addEventListener("resize", applySize);
 
     const tick = () => {
+      if (reduceGpuLoadRef.current) {
+        skipFrameToggleRef.current = !skipFrameToggleRef.current;
+        if (skipFrameToggleRef.current) {
+          rafRef.current = requestAnimationFrame(tick);
+          return;
+        }
+      }
+
       const { w: width, h: height } = sizeRef.current;
       if (width === 0) { rafRef.current = requestAnimationFrame(tick); return; }
 

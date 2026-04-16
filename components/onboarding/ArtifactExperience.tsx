@@ -39,6 +39,7 @@ type Gate = "hydrating" | "splash" | "player";
 export function ArtifactExperience() {
   const [gate, setGate] = useState<Gate>("hydrating");
   const [isMobileViewport, setIsMobileViewport] = useState(false);
+  const [secondaryPanelOpen, setSecondaryPanelOpen] = useState(false);
 
   useEffect(() => {
     const mq = window.matchMedia(`(max-width: ${MOBILE_MAX_WIDTH_PX}px)`);
@@ -85,9 +86,14 @@ export function ArtifactExperience() {
         {showPlayer ? (
           <>
             <main className="relative flex min-h-screen items-center justify-center overflow-hidden">
-              <Visualizer />
+              <Visualizer
+                secondaryPanelOpen={secondaryPanelOpen}
+              />
             </main>
-            <SecondaryPanel />
+            <SecondaryPanel
+              open={secondaryPanelOpen}
+              onOpenChange={setSecondaryPanelOpen}
+            />
             <AudioChrome />
           </>
         ) : null}

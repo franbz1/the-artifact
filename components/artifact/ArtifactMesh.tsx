@@ -19,6 +19,7 @@ import {
   FIT_SCALE_RESPONSE,
   CLICK_VS_DRAG_THRESHOLD_PX,
   CURSOR_LIGHT_COLOR,
+  SHIVER_CONFIG,
 } from "./artifact.constants";
 import { useAudio } from "@/components/audio/AudioProvider";
 
@@ -53,6 +54,13 @@ export function ArtifactMesh({ analyserRef, rawAmpOutRef }: ArtifactMeshProps) {
   const wobbleEuler = useRef(new THREE.Euler());
   const wobbleQuat = useRef(new THREE.Quaternion());
   const normalFrameCounter = useRef(0);
+  const shiverTimer = useRef(0);
+  const shiverPhase = useRef(-1);
+  const shiverDir = useRef(new THREE.Vector3(1, 0, 0));
+  const shiverNextInterval = useRef(
+    SHIVER_CONFIG.minInterval +
+      Math.random() * (SHIVER_CONFIG.maxInterval - SHIVER_CONFIG.minInterval),
+  );
   const { gl } = useThree();
 
   const onPointerOver = useCallback(() => {
@@ -204,6 +212,38 @@ export function ArtifactMesh({ analyserRef, rawAmpOutRef }: ArtifactMeshProps) {
       : PERF_CONFIG.normalUpdateStride;
     const skipSpikeSimplex = idleRest;
 
+    let shiverWavefront = 0;
+    let shiverActive = false;
+    const shiverSigmaSq2 =
+      2 * SHIVER_CONFIG.waveSigma * SHIVER_CONFIG.waveSigma;
+
+    if (shiverPhase.current < 0) {
+      if (idleRest) shiverTimer.current += delta;
+      if (shiverTimer.current >= shiverNextInterval.current && idleRest) {
+        shiverPhase.current = 0;
+        shiverTimer.current = 0;
+        shiverNextInterval.current =
+          SHIVER_CONFIG.minInterval +
+          Math.random() *
+            (SHIVER_CONFIG.maxInterval - SHIVER_CONFIG.minInterval);
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(2 * Math.random() - 1);
+        shiverDir.current.set(
+          Math.sin(phi) * Math.cos(theta),
+          Math.sin(phi) * Math.sin(theta),
+          Math.cos(phi),
+        );
+      }
+    } else {
+      shiverPhase.current += delta / SHIVER_CONFIG.duration;
+      if (shiverPhase.current >= 1) {
+        shiverPhase.current = -1;
+      } else {
+        shiverActive = true;
+        shiverWavefront = -1.3 + shiverPhase.current * 2.6;
+      }
+    }
+
     const posAttr = mesh.geometry.getAttribute("position");
     const positions = posAttr.array as Float32Array;
     let maxRadius = 0;
@@ -269,7 +309,18 @@ export function ArtifactMesh({ analyserRef, rawAmpOutRef }: ArtifactMeshProps) {
 
       const tension = -AUDIO_CONFIG.surfaceTension * amp * (1 - clampedSpike);
 
-      const totalDisp = idleDisp + primaryDisp + detailDisp + tension;
+      let shiverDisp = 0;
+      if (shiverActive) {
+        const proj =
+          bx * shiverDir.current.x +
+          by * shiverDir.current.y +
+          bz * shiverDir.current.z;
+        const dist = proj - shiverWavefront;
+        shiverDisp =
+          SHIVER_CONFIG.amplitude * Math.exp(-(dist * dist) / shiverSigmaSq2);
+      }
+
+      const totalDisp = idleDisp + primaryDisp + detailDisp + tension + shiverDisp;
 
       const px = bx + dirX * totalDisp;
       const py = by + dirY * totalDisp;

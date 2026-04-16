@@ -3,7 +3,11 @@
 import { ArtifactCanvas } from "./ArtifactCanvas";
 import { ARTIFACT_CONTAINER_SIZE } from "./artifact.constants";
 
-export function Artifact() {
+interface ArtifactProps {
+  reduceGpuLoad?: boolean;
+}
+
+export function Artifact({ reduceGpuLoad = false }: ArtifactProps) {
   return (
     <div
       className="relative flex items-center justify-center"
@@ -12,7 +16,7 @@ export function Artifact() {
         height: ARTIFACT_CONTAINER_SIZE.height,
       }}
     >
-      <ArtifactCanvas />
+      <ArtifactCanvas reduceGpuLoad={reduceGpuLoad} />
     </div>
   );
 }

@@ -158,10 +158,53 @@ export function FloatingLibraryPanel({
         maxHeight: `${LIBRARY_FLOATING_PANEL_MAX_HEIGHT_REM}rem`,
       };
 
+  const body = (
+    <>
+      <p className="shrink-0 border-b border-border-faint/80 px-breath pb-2 pt-3 font-sans text-[0.65rem] font-medium uppercase tracking-[0.22em] text-text-inscription">
+        Library
+      </p>
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-grain py-1">
+        {library.length === 0 ? (
+          <p className="px-grain py-3 font-sans text-sm text-membrane-dim">
+            No tracks
+          </p>
+        ) : (
+          <ul className="min-w-0">
+            {library.map((entry) => (
+              <LibraryTrackRow
+                key={entry.id}
+                entry={entry}
+                reduceMotion={reduceMotion}
+                onPlay={onPlay}
+              />
+            ))}
+          </ul>
+        )}
+      </div>
+    </>
+  );
+
+  if (stacked) {
+    return (
+      <aside
+        ref={libraryBoundsRef}
+        role="region"
+        aria-label="Library"
+        className={cn(
+          "relative flex w-full min-h-0 shrink-0 flex-col overflow-hidden border-b border-border-faint/80",
+          "max-h-[6rem]",
+          className,
+        )}
+      >
+        {body}
+      </aside>
+    );
+  }
+
   return (
     <motion.aside
-      ref={stacked ? libraryBoundsRef : panelRef}
-      id={stacked ? undefined : SECONDARY_PANEL_REGION_ID}
+      ref={panelRef}
+      id={SECONDARY_PANEL_REGION_ID}
       role="region"
       aria-label="Library"
       initial={
@@ -200,38 +243,13 @@ export function FloatingLibraryPanel({
       style={layoutStyle}
       className={cn(
         "flex flex-col overflow-hidden shadow-depth",
-        stacked
-          ? "relative w-full shrink-0"
-          : cn(
-              "pointer-events-auto fixed top-1/2 -translate-y-1/2",
-              LIBRARY_FLOATING_PANEL_WIDTH_CLASS,
-            ),
+        "pointer-events-auto fixed top-1/2 -translate-y-1/2",
+        LIBRARY_FLOATING_PANEL_WIDTH_CLASS,
         "glass-obsidian border border-border-faint/80",
-        stacked && "max-h-[6rem]",
         className,
       )}
     >
-      <p className="shrink-0 border-b border-border-faint/80 px-breath pb-2 pt-3 font-sans text-[0.65rem] font-medium uppercase tracking-[0.22em] text-text-inscription">
-        Library
-      </p>
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-grain py-1">
-        {library.length === 0 ? (
-          <p className="px-grain py-3 font-sans text-sm text-membrane-dim">
-            No tracks
-          </p>
-        ) : (
-          <ul className="min-w-0">
-            {library.map((entry) => (
-              <LibraryTrackRow
-                key={entry.id}
-                entry={entry}
-                reduceMotion={reduceMotion}
-                onPlay={onPlay}
-              />
-            ))}
-          </ul>
-        )}
-      </div>
+      {body}
     </motion.aside>
   );
 }

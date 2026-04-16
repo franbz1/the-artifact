@@ -63,6 +63,8 @@ function libraryEntryIdFromActiveDrag(
 }
 
 interface SecondaryPanelProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   className?: string;
 }
 
@@ -115,8 +117,11 @@ function DragGhostRow({
   );
 }
 
-export function SecondaryPanel({ className }: SecondaryPanelProps) {
-  const [open, setOpen] = useState(false);
+export function SecondaryPanel({
+  open,
+  onOpenChange,
+  className,
+}: SecondaryPanelProps) {
   const reduceMotion = useReducedMotion();
   const panelRef = useRef<HTMLDivElement>(null);
   const libraryPanelBoundsRef = useRef<HTMLElement | null>(null);
@@ -158,12 +163,12 @@ export function SecondaryPanel({ className }: SecondaryPanelProps) {
   );
 
   const closePanel = useCallback(() => {
-    setOpen(false);
-  }, []);
+    onOpenChange(false);
+  }, [onOpenChange]);
 
   const toggleFromButton = useCallback(() => {
-    setOpen((v) => !v);
-  }, []);
+    onOpenChange(!open);
+  }, [onOpenChange, open]);
 
   useEffect(() => {
     if (!open) return;
@@ -389,21 +394,22 @@ export function SecondaryPanel({ className }: SecondaryPanelProps) {
               initial={
                 reduceMotion
                   ? { opacity: 0 }
-                  : { opacity: 0, filter: "blur(6px)" }
+                  : { opacity: 0, x: 10 }
               }
-              animate={{ opacity: 1, filter: "blur(0px)" }}
+              animate={{ opacity: 1, x: 0 }}
               exit={
                 reduceMotion
                   ? { opacity: 0, transition: { duration: 0.1 } }
-                  : { opacity: 0, filter: "blur(6px)", transition: { duration: 0.35 } }
+                  : { opacity: 0, x: 10, transition: { duration: 0.3 } }
               }
-              transition={{ duration: 0.4, ease: [0.22, 0.68, 0.35, 1] }}
+              transition={{ duration: 0.35, ease: [0.22, 0.68, 0.35, 1] }}
               style={{
                 right: `calc(${LIBRARY_PANEL_RIGHT_OFFSET_REM}rem + env(safe-area-inset-right, 0px))`,
                 zIndex: LIBRARY_FLOATING_PANEL_Z,
               }}
               className={cn(
-                "pointer-events-auto fixed flex max-h-[min(90vh,36rem)] flex-col gap-grain overflow-visible",
+                "pointer-events-auto fixed isolate flex max-h-[min(90vh,36rem)] flex-col overflow-hidden rounded-2xl",
+                "glass-obsidian",
                 ARTIFACT_ZONE_CENTER_Y_CLASS,
                 LIBRARY_FLOATING_PANEL_WIDTH_CLASS,
               )}

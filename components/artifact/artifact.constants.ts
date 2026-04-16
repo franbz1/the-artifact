@@ -43,17 +43,21 @@ export const AUDIO_CONFIG = {
 
 export const CAMERA_ZOOM_CONFIG = {
   baseDistance: 4.0,
-  zoomInAmount: 0.85,
-  /** How fast zoom level chases rising loudness (lower = more gradual “steps”). */
-  smoothingUp: 0.38,
-  smoothingDown: 0.14,
-  response: 0.26,
+  /** Camera Z span from idle (level 0) to full zoom (level 1). Slightly wide for more travel. */
+  zoomInAmount: 0.95,
+  /** How fast zoom level chases rising loudness (lower = peaks must sustain to reach max). */
+  smoothingUp: 0.2,
+  /** How fast zoom releases when loudness drops (slightly quicker avoids “stuck” near max). */
+  smoothingDown: 0.1,
+  /** How fast camera Z eases toward the target distance. */
+  response: 0.18,
   idleRetreat: 0.12,
   /**
-   * Zoom drive = raw^power (raw ∈ [0,1] from analyser). Higher values reserve most of the
-   * zoom range for peaks: e.g. power 3.5 → ~46% drive at raw 0.8, only ~1.0 at raw 1.0.
+   * Zoom drive = raw^power (raw ∈ [0,1] from analyser RMS). High power keeps most loud
+   * passages in the mid zoom band; only brief peaks near raw≈1 approach full zoom.
+   * e.g. power 7 → ~21% drive at 0.8, ~48% at 0.9, ~78% at 0.95, 100% at 1.0.
    */
-  zoomDrivePower: 3.5,
+  zoomDrivePower: 7,
 } as const;
 
 export const FIT_SCALE_RESPONSE = 0.08;
@@ -62,6 +66,19 @@ export const CLICK_VS_DRAG_THRESHOLD_PX = 8;
 
 /** Cursor-follow point light — same hue as ambient lunar-bright (`--color-lunar-bright`). */
 export const CURSOR_LIGHT_COLOR = "#e8945c" as const;
+
+export const SHIVER_CONFIG = {
+  /** Minimum seconds between shivers. */
+  minInterval: 10,
+  /** Maximum seconds between shivers. */
+  maxInterval: 15,
+  /** Seconds for the wave to cross the full diameter. */
+  duration: 2,
+  /** Outward displacement of the traveling pulse. */
+  amplitude: 0.06,
+  /** Gaussian half-width — controls how tight the ripple band is. */
+  waveSigma: 0.05,
+} as const;
 
 export const MATERIAL_CONFIG = {
   /** Warm umber-black albedo (not neutral #000 — reads as black in scene light). */

@@ -273,6 +273,42 @@ export function FloatingQueuePanel({
         maxHeight: `${QUEUE_FLOATING_PANEL_MAX_HEIGHT_REM}rem`,
       };
 
+  const headerAndBody = (
+    <>
+      <p className="shrink-0 border-b border-border-faint/80 px-breath pb-2 pt-3 font-sans text-[0.65rem] font-medium uppercase tracking-[0.22em] text-text-inscription">
+        Queue
+      </p>
+      {showEmptyHint ? (
+        <QueueEmptyDropZone libraryDragActive={libraryDragActive}>
+          {queueBody}
+        </QueueEmptyDropZone>
+      ) : (
+        <div
+          className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-grain py-1"
+          style={{ minHeight: `${QUEUE_FLOATING_PANEL_MIN_BODY_REM}rem` }}
+        >
+          {queueBody}
+        </div>
+      )}
+    </>
+  );
+
+  if (stacked) {
+    return (
+      <aside
+        role="region"
+        aria-label="Playback queue"
+        style={motionStyle}
+        className={cn(
+          "relative flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden",
+          className,
+        )}
+      >
+        {headerAndBody}
+      </aside>
+    );
+  }
+
   return (
     <motion.aside
       role="region"
@@ -314,30 +350,12 @@ export function FloatingQueuePanel({
       className={cn(
         "flex flex-col overflow-hidden shadow-depth",
         "glass-obsidian border border-border-faint/80",
-        stacked
-          ? "relative min-h-0 w-full flex-1"
-          : cn(
-              "pointer-events-auto fixed top-1/2 -translate-y-1/2",
-              QUEUE_FLOATING_PANEL_WIDTH_CLASS,
-            ),
+        "pointer-events-auto fixed top-1/2 -translate-y-1/2",
+        QUEUE_FLOATING_PANEL_WIDTH_CLASS,
         className,
       )}
     >
-      <p className="shrink-0 border-b border-border-faint/80 px-breath pb-2 pt-3 font-sans text-[0.65rem] font-medium uppercase tracking-[0.22em] text-text-inscription">
-        Queue
-      </p>
-      {showEmptyHint ? (
-        <QueueEmptyDropZone libraryDragActive={libraryDragActive}>
-          {queueBody}
-        </QueueEmptyDropZone>
-      ) : (
-        <div
-          className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-grain py-1"
-          style={{ minHeight: `${QUEUE_FLOATING_PANEL_MIN_BODY_REM}rem` }}
-        >
-          {queueBody}
-        </div>
-      )}
+      {headerAndBody}
     </motion.aside>
   );
 }
