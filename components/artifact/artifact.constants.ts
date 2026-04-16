@@ -95,17 +95,20 @@ export const SHIVER_CONFIG = {
 /** Micro ripples during playback: tied to RMS spikes and camera zoom drive (same raw^power curve). */
 export const SHIVER_PLAYBACK_CONFIG = {
   /** Min frame-to-frame increase in raw RMS (0–1) to count as an attack. */
-  minRawDelta: 0.042,
+  minRawDelta: 0.036,
   /** rawDelta / this → normalized spike strength before capping at 1. */
-  deltaReference: 0.13,
-  /** Base radius displacement; scaled per wave by strength (smaller than idle SHIVER_CONFIG.amplitude). */
-  microAmplitude: 0.022,
-  microWaveSigma: 0.088,
-  /** Faster than idle shiver so hits read as transient “glitches”. */
-  microDuration: 0.38,
-  /** Min seconds between spawns (avoids burst noise). */
-  spawnCooldown: 0.045,
-  maxConcurrentWaves: 5,
+  deltaReference: 0.2,
+  /** Base radius displacement; scaled per wave by strength × zoom (smaller than idle SHIVER_CONFIG.amplitude). */
+  microAmplitude: 0.015,
+  microWaveSigma: 0.072,
+  /** Base seconds for one wave to cross the sphere; scaled down when zoom drive is high (matches camera punch). */
+  microDuration: 0.5,
+  /** At zoomDrive 0 → duration × this; at zoomDrive 1 → duration × microDurationZoomMin (faster ripples when zoomed in). */
+  microDurationZoomMax: 0.9,
+  microDurationZoomMin: 0.62,
+  /** Min seconds between spawns (allows several quick micro-ripples on dense drums). */
+  spawnCooldown: 0.032,
+  maxConcurrentWaves: 7,
 } as const;
 
 export const MATERIAL_CONFIG = {

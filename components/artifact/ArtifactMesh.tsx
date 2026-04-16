@@ -88,6 +88,12 @@ export function ArtifactMesh({
   const pbStrength = useRef(
     new Float32Array(SHIVER_PLAYBACK_CONFIG.maxConcurrentWaves),
   );
+  const pbDurInv = useRef(
+    new Float32Array(SHIVER_PLAYBACK_CONFIG.maxConcurrentWaves),
+  );
+  const pbSigmaSq2 = useRef(
+    new Float32Array(SHIVER_PLAYBACK_CONFIG.maxConcurrentWaves),
+  );
   const pbDirs = useRef(
     Array.from({ length: SHIVER_PLAYBACK_CONFIG.maxConcurrentWaves }, () =>
       new THREE.Vector3(1, 0, 0),
@@ -295,10 +301,6 @@ export function ArtifactMesh({
     let shiverActive = false;
     const shiverSigmaSq2 =
       2 * SHIVER_CONFIG.waveSigma * SHIVER_CONFIG.waveSigma;
-    const playbackSigmaSq2 =
-      2 *
-      SHIVER_PLAYBACK_CONFIG.microWaveSigma *
-      SHIVER_PLAYBACK_CONFIG.microWaveSigma;
 
     const rawDelta = rawAmp - prevRawAmpForShiver.current;
     prevRawAmpForShiver.current = rawAmp;
@@ -311,13 +313,17 @@ export function ArtifactMesh({
     const pb = pbPhase.current;
     const pbStr = pbStrength.current;
     const pbD = pbDirs.current;
-    const pbDur = SHIVER_PLAYBACK_CONFIG.microDuration;
+    const pbInv = pbDurInv.current;
+    const pbSig = pbSigmaSq2.current;
     const nSlots = SHIVER_PLAYBACK_CONFIG.maxConcurrentWaves;
+    const cfg = SHIVER_PLAYBACK_CONFIG;
 
     for (let s = 0; s < nSlots; s++) {
-      if (pb[s]! >= 0) {
-        pb[s]! += delta / pbDur;
-        if (pb[s]! >= 1) pb[s] = -1;
+      if (pb[s]! < 0) continue;
+      pb[s]! += delta * pbInv[s]!;
+      if (pb[s]! >= 1) {
+        pb[s] = -1;
+        pbInv[s] = 0;
       }
     }
 
@@ -339,14 +345,23 @@ export function ArtifactMesh({
         }
       }
       if (free >= 0) {
-        const spikeNorm = Math.min(
-          1,
-          rawDelta / SHIVER_PLAYBACK_CONFIG.deltaReference,
-        );
+        const spikeNorm = Math.min(1, rawDelta / cfg.deltaReference);
+        /** Loudness “punch” aligned with camera zoom drive (same curve as ArtifactCameraZoom). */
         const strength =
-          (0.22 + 0.78 * spikeNorm) * (0.18 + 0.82 * zoomDrive);
-        pbStr[free] = Math.min(1, Math.max(0.08, strength));
+          (0.08 + 0.92 * spikeNorm) * (0.06 + 0.94 * zoomDrive);
+        pbStr[free] = Math.min(1, Math.max(0.06, strength));
         pb[free] = 0;
+        const durZoom =
+          cfg.microDuration *
+          (cfg.microDurationZoomMax +
+            (cfg.microDurationZoomMin - cfg.microDurationZoomMax) * zoomDrive);
+        const durAttack = durZoom * (1.06 - 0.2 * spikeNorm);
+        pbInv[free] = 1 / Math.max(0.12, durAttack);
+        const sigma =
+          cfg.microWaveSigma *
+          (0.9 + 0.1 * (1 - zoomDrive)) *
+          (0.94 + 0.06 * (1 - spikeNorm));
+        pbSig[free] = 2 * sigma * sigma;
         const theta = Math.random() * Math.PI * 2;
         const phi = Math.acos(2 * Math.random() - 1);
         pbD[free]!.set(
@@ -354,7 +369,7 @@ export function ArtifactMesh({
           Math.sin(phi) * Math.sin(theta),
           Math.cos(phi),
         );
-        playbackShiverCooldown.current = SHIVER_PLAYBACK_CONFIG.spawnCooldown;
+        playbackShiverCooldown.current = cfg.spawnCooldown;
       }
     }
 
@@ -463,17 +478,18 @@ export function ArtifactMesh({
           SHIVER_CONFIG.amplitude * Math.exp(-(dist * dist) / shiverSigmaSq2);
       }
 
-      const microAmpBase = SHIVER_PLAYBACK_CONFIG.microAmplitude;
+      const microAmpBase = cfg.microAmplitude;
       for (let s = 0; s < nSlots; s++) {
         if (pb[s]! < 0) continue;
         const wf = -1.3 + pb[s]! * 2.6;
         const d = pbD[s]!;
         const proj = bx * d.x + by * d.y + bz * d.z;
         const dist = proj - wf;
+        const sig2 = pbSig[s]! > 0 ? pbSig[s]! : 2 * cfg.microWaveSigma * cfg.microWaveSigma;
         shiverDisp +=
           microAmpBase *
           pbStr[s]! *
-          Math.exp(-(dist * dist) / playbackSigmaSq2);
+          Math.exp(-(dist * dist) / sig2);
       }
 
       const totalDisp = idleDisp + primaryDisp + detailDisp + tension + shiverDisp;

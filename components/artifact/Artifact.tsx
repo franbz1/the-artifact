@@ -24,7 +24,7 @@ export function Artifact({
         height: size.height,
       }}
     >
-      <ArtifactCanvas reduceGpuLoad={reduceGpuLoad} isMobile={isMobile} />
+      <ArtifactCanvas reduceGpuLoad={reduceGpuLoad} />
     </div>
   );
 }
