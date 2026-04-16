@@ -18,6 +18,8 @@ interface WaveCanvasProps {
   progressStripRef?: RefObject<HTMLElement | null>;
   /** Skip half the rAF draws when true (e.g. sidebar open over the canvas). */
   reduceGpuLoad?: boolean;
+  /** CSS pixel height of the strip — must match {@link ProgressOverlay} and layout zones. */
+  stripHeightPx?: number;
   className?: string;
 }
 
@@ -118,6 +120,7 @@ export function WaveCanvas({
   progressRef,
   progressStripRef,
   reduceGpuLoad = false,
+  stripHeightPx = WAVE_CONFIG.height,
   className,
 }: WaveCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -138,7 +141,7 @@ export function WaveCanvas({
 
     const applySize = () => {
       const w = window.innerWidth;
-      const h = WAVE_CONFIG.height;
+      const h = stripHeightPx;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
       if (sizeRef.current.w === w && sizeRef.current.h === h) return;
@@ -319,7 +322,7 @@ export function WaveCanvas({
       cancelAnimationFrame(rafRef.current);
       window.removeEventListener("resize", applySize);
     };
-  }, [waveformRefs, progressRef, progressStripRef]);
+  }, [waveformRefs, progressRef, progressStripRef, stripHeightPx]);
 
   return (
     <canvas

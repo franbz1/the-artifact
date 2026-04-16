@@ -10,14 +10,19 @@ import { ProgressOverlay } from "./ProgressOverlay";
 import {
   ARTIFACT_ZONE_WRAPPER_CLASS,
   WAVE_STRIP_BOTTOM_CLASS,
+  waveStripHeightPx,
 } from "./visualizer.constants";
 
 interface VisualizerProps {
   /** When true, reduce GPU work (sidebar overlaps WebGL + wave canvas). */
   secondaryPanelOpen?: boolean;
+  isMobile?: boolean;
 }
 
-export function Visualizer({ secondaryPanelOpen = false }: VisualizerProps) {
+export function Visualizer({
+  secondaryPanelOpen = false,
+  isMobile = false,
+}: VisualizerProps) {
   const { analyserNode, isPlaying, currentTime, duration } = useAudio();
   const waveformRefs = useWaveformData(analyserNode, isPlaying);
   const progressRef = useRef(0);
@@ -25,11 +30,16 @@ export function Visualizer({ secondaryPanelOpen = false }: VisualizerProps) {
   progressRef.current =
     duration > 0 ? Math.min(1, Math.max(0, currentTime / duration)) : 0;
 
+  const stripH = waveStripHeightPx(isMobile);
+
   return (
     <>
       <div className={ARTIFACT_ZONE_WRAPPER_CLASS}>
         <div className="pointer-events-auto flex justify-center">
-          <Artifact reduceGpuLoad={secondaryPanelOpen} />
+          <Artifact
+            reduceGpuLoad={secondaryPanelOpen}
+            isMobile={isMobile}
+          />
         </div>
       </div>
 
@@ -38,10 +48,11 @@ export function Visualizer({ secondaryPanelOpen = false }: VisualizerProps) {
         progressRef={progressRef}
         progressStripRef={progressStripRef}
         reduceGpuLoad={secondaryPanelOpen}
+        stripHeightPx={stripH}
         className={`fixed z-20 ${WAVE_STRIP_BOTTOM_CLASS}`}
       />
-      <ProgressOverlay ref={progressStripRef} />
-      <DustLight />
+      <ProgressOverlay ref={progressStripRef} stripHeightPx={stripH} />
+      <DustLight isMobile={isMobile} />
     </>
   );
 }

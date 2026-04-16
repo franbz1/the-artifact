@@ -21,6 +21,8 @@ import {
 
 interface ProgressOverlayProps {
   className?: string;
+  /** Must match {@link WaveCanvas} strip height. */
+  stripHeightPx?: number;
 }
 
 function assignRef<T>(ref: Ref<T> | undefined, value: T | null) {
@@ -34,7 +36,7 @@ function assignRef<T>(ref: Ref<T> | undefined, value: T | null) {
  * Handle dot sits at the deepest fill gradient end (Y synced from WaveCanvas via CSS var).
  */
 export const ProgressOverlay = forwardRef<HTMLDivElement, ProgressOverlayProps>(
-  function ProgressOverlay({ className }, ref) {
+  function ProgressOverlay({ className, stripHeightPx = WAVE_CONFIG.height }, ref) {
     const { seek, duration, isLoaded, currentTime } = useAudio();
     const draggingRef = useRef(false);
     const rootRef = useRef<HTMLDivElement | null>(null);
@@ -96,7 +98,7 @@ export const ProgressOverlay = forwardRef<HTMLDivElement, ProgressOverlayProps>(
     const valueNow =
       duration > 0 ? Math.round((currentTime / duration) * 100) : 0;
 
-    const fillBottomFallback = approximateWaveFillBottomPx(WAVE_CONFIG.height);
+    const fillBottomFallback = approximateWaveFillBottomPx(stripHeightPx);
 
     return (
       <div
@@ -127,7 +129,7 @@ export const ProgressOverlay = forwardRef<HTMLDivElement, ProgressOverlayProps>(
         }}
         style={
           {
-            height: WAVE_CONFIG.height,
+            height: stripHeightPx,
             [PROGRESS_DOT_TOP_VAR]: `${fillBottomFallback}px`,
           } as CSSProperties
         }

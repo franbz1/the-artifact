@@ -471,3 +471,14 @@ body::after {
   opacity: 0.5;
   transition: opacity 1.2s var(--ease-dissolve);
 }
+
+/* -------------------------------------------------------------------------
+   MOBILE — safe horizontal inset (notches). Vertical handled per fixed layer.
+   ------------------------------------------------------------------------- */
+
+@media (max-width: 768px) {
+  .safe-area-pad-x {
+    padding-left: max(1rem, env(safe-area-inset-left, 0px));
+    padding-right: max(1rem, env(safe-area-inset-right, 0px));
+  }
+}

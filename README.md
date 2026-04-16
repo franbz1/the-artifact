@@ -14,8 +14,7 @@ Most players optimize for density: lists, chrome, and speed. **The Artifact** op
 
 ## What you need
 
-- **Desktop or laptop** (pointer + keyboard). The experience is gated: small viewports and touch-first devices are blocked with a short notice—layout and interaction are designed for larger screens.
-- **Node.js** for local development.
+- **Modern browser** (desktop, laptop, or phone). The layout adapts: on small / touch viewports the library and queue open as a bottom sheet, transport stays visible, and the 3D artifact uses slow auto-rotation instead of drag. For local development you need **Node.js**.
 
 ---
 

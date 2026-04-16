@@ -39,6 +39,9 @@ export function approximateWaveFillBottomPx(
 
 // -- Wave Canvas --
 
+/** Tighter strip on touch / narrow layouts — keep in sync with Tailwind classes below. */
+export const WAVE_STRIP_HEIGHT_MOBILE_PX = 100;
+
 export const WAVE_CONFIG = {
   height: 148,
   /** Fraction of canvas height reserved as empty margin top + bottom so peaks stay visible */
@@ -55,37 +58,41 @@ export const WAVE_CONFIG = {
   idleSineSpeed: 0.0003,
 } as const;
 
+export function waveStripHeightPx(isMobile: boolean): number {
+  return isMobile ? WAVE_STRIP_HEIGHT_MOBILE_PX : WAVE_CONFIG.height;
+}
+
 /**
  * Wave + seek strip anchor — shared by WaveCanvas and ProgressOverlay.
  * Bottom offset is the distance from the viewport bottom; keep ~0.5rem above
  * CONTROL_STRIP_DOCK_CLASS so the strip clears the controls (must stay in sync).
  */
 export const WAVE_STRIP_BOTTOM_CLASS =
-  "bottom-[1.5rem] left-0 md:bottom-[1.75rem]" as const;
+  "bottom-[max(1.5rem,env(safe-area-inset-bottom,0px))] left-0 md:bottom-[1.75rem]" as const;
 
 /**
  * Control cluster: fixed near the viewport bottom with modest inset; wave strip
  * sits ~0.5rem above this anchor (see WAVE_STRIP_BOTTOM_CLASS).
  */
 export const CONTROL_STRIP_DOCK_CLASS =
-  "bottom-4 left-0 right-0 md:bottom-5" as const;
+  "bottom-[max(1rem,env(safe-area-inset-bottom,0px))] left-0 right-0 pb-[env(safe-area-inset-bottom,0px)] md:bottom-5 md:pb-0" as const;
 
 /**
  * Fixed column above the wave strip: vertically centers The Artifact so the gap from the
  * viewport top to the block matches the gap from the block to the wave (same inset values
- * as WAVE_STRIP_BOTTOM_CLASS + {@link WAVE_CONFIG.height}).
+ * as WAVE_STRIP_BOTTOM_CLASS + wave strip height).
  *
- * Note: 148px in class strings must stay equal to WAVE_CONFIG.height (Tailwind static scan).
+ * Mobile uses {@link WAVE_STRIP_HEIGHT_MOBILE_PX}; md+ uses {@link WAVE_CONFIG.height}.
  */
 export const ARTIFACT_ZONE_WRAPPER_CLASS =
-  "pointer-events-none fixed inset-x-0 top-0 z-[var(--z-atmosphere)] flex items-center justify-center bottom-[calc(1.5rem+148px)] md:bottom-[calc(1.75rem+148px)]" as const;
+  "pointer-events-none fixed inset-x-0 top-0 z-[var(--z-atmosphere)] flex items-center justify-center bottom-[calc(max(1.5rem,env(safe-area-inset-bottom,0px))+100px)] md:bottom-[calc(1.75rem+148px)]" as const;
 
 /**
  * Vertical center of the artifact column (volume, sidebar) — matches the midpoint of
  * {@link ARTIFACT_ZONE_WRAPPER_CLASS}.
  */
 export const ARTIFACT_ZONE_CENTER_Y_CLASS =
-  "top-[calc((100svh-1.5rem-148px)/2)] -translate-y-1/2 md:top-[calc((100svh-1.75rem-148px)/2)]" as const;
+  "top-[calc((100svh-max(1.5rem,env(safe-area-inset-bottom,0px))-100px)/2)] -translate-y-1/2 md:top-[calc((100svh-1.75rem-148px)/2)]" as const;
 
 // Frequency bands — each rendered as its own wave, all layered at the same vertical center.
 // binStart/binEnd are fractions of frequencyBinCount (0-1).

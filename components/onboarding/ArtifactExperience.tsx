@@ -5,10 +5,10 @@ import { startTransition, useCallback, useEffect, useState } from "react";
 import { AudioProvider } from "@/components/audio/AudioProvider";
 import { ArtifactEntryCover } from "@/components/onboarding/ArtifactEntryCover";
 import {
-  MOBILE_MAX_WIDTH_PX,
   readArtifactOnboardCookie,
   writeArtifactOnboardCookie,
 } from "@/components/onboarding/onboarding.constants";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 const Visualizer = dynamic(
   () =>
@@ -38,44 +38,28 @@ type Gate = "hydrating" | "splash" | "player";
 
 export function ArtifactExperience() {
   const [gate, setGate] = useState<Gate>("hydrating");
-  const [isMobileViewport, setIsMobileViewport] = useState(false);
   const [secondaryPanelOpen, setSecondaryPanelOpen] = useState(false);
+  const [mobileSideTab, setMobileSideTab] = useState<"library" | "queue">(
+    "library",
+  );
+  const isMobile = useIsMobile();
+
+  const openSecondaryMobile = useCallback((tab: "library" | "queue") => {
+    setMobileSideTab(tab);
+    setSecondaryPanelOpen(true);
+  }, []);
 
   useEffect(() => {
-    const mq = window.matchMedia(`(max-width: ${MOBILE_MAX_WIDTH_PX}px)`);
-    const sync = () => {
-      const mobile = mq.matches;
-      setIsMobileViewport(mobile);
-      return mobile;
-    };
-
-    const mobile = sync();
     const onboarded = readArtifactOnboardCookie();
     startTransition(() => {
-      if (onboarded && !mobile) {
-        setGate("player");
-      } else {
-        setGate("splash");
-      }
+      setGate(onboarded ? "player" : "splash");
     });
-
-    const onMq = () => {
-      const next = sync();
-      if (next) {
-        startTransition(() => {
-          setGate((g) => (g === "player" ? "splash" : g));
-        });
-      }
-    };
-    mq.addEventListener("change", onMq);
-    return () => mq.removeEventListener("change", onMq);
   }, []);
 
   const handleContinue = useCallback(() => {
-    if (isMobileViewport) return;
     writeArtifactOnboardCookie();
     setGate("player");
-  }, [isMobileViewport]);
+  }, []);
 
   const showPlayer = gate === "player";
   const showCover = gate === "splash";
@@ -88,21 +72,30 @@ export function ArtifactExperience() {
             <main className="relative flex min-h-screen items-center justify-center overflow-hidden">
               <Visualizer
                 secondaryPanelOpen={secondaryPanelOpen}
+                isMobile={isMobile}
               />
             </main>
             <SecondaryPanel
               open={secondaryPanelOpen}
               onOpenChange={setSecondaryPanelOpen}
+              isMobile={isMobile}
+              mobileActiveTab={mobileSideTab}
+              onMobileTabChange={setMobileSideTab}
             />
-            <AudioChrome />
+            <AudioChrome
+              isMobile={isMobile}
+              onOpenLibrary={() => {
+                openSecondaryMobile("library");
+              }}
+              onOpenQueue={() => {
+                openSecondaryMobile("queue");
+              }}
+            />
           </>
         ) : null}
 
         {showCover ? (
-          <ArtifactEntryCover
-            isMobileViewport={isMobileViewport}
-            onContinue={handleContinue}
-          />
+          <ArtifactEntryCover onContinue={handleContinue} />
         ) : null}
       </div>
     </AudioProvider>

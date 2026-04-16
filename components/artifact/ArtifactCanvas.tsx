@@ -3,16 +3,17 @@
 import { useRef, useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
 import { useAudio } from "@/components/audio/AudioProvider";
+import { useIsMobileRef } from "@/hooks/useIsMobile";
 import { ArtifactScene } from "./ArtifactScene";
 
 interface ArtifactCanvasProps {
-  /** Lower DPR while sidebar is open to ease GPU compositing with backdrop layers. */
   reduceGpuLoad?: boolean;
 }
 
 export function ArtifactCanvas({ reduceGpuLoad = false }: ArtifactCanvasProps) {
   const { analyserNode } = useAudio();
   const analyserRef = useRef<AnalyserNode | null>(null);
+  const isMobileRef = useIsMobileRef();
 
   useEffect(() => {
     analyserRef.current = analyserNode;
@@ -25,7 +26,7 @@ export function ArtifactCanvas({ reduceGpuLoad = false }: ArtifactCanvasProps) {
       camera={{ position: [0, 0, 4], fov: 45 }}
       style={{ width: "100%", height: "100%", background: "transparent" }}
     >
-      <ArtifactScene analyserRef={analyserRef} />
+      <ArtifactScene analyserRef={analyserRef} isMobileRef={isMobileRef} />
     </Canvas>
   );
 }

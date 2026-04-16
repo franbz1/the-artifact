@@ -25,6 +25,8 @@ export interface FloatingLibraryPanelProps {
   libraryBoundsRef?: RefObject<HTMLElement | null>;
   /** When true, panel is a block inside the stacked sidebar (no fixed positioning). */
   stacked?: boolean;
+  /** Taller, scrollable block in mobile bottom sheet (vs compact strip in desktop sidebar). */
+  sheetMode?: boolean;
   reduceMotion: boolean | null;
   className?: string;
 }
@@ -33,10 +35,14 @@ function LibraryTrackRow({
   entry,
   reduceMotion,
   onPlay,
+  showAddShortcut,
+  onAddToQueue,
 }: {
   entry: TrackEntry;
   reduceMotion: boolean | null;
   onPlay: (id: string) => void;
+  showAddShortcut?: boolean;
+  onAddToQueue?: (id: string) => void;
 }) {
   const clipRef = useRef<HTMLSpanElement>(null);
   const [surfaceActive, setSurfaceActive] = useState(false);
@@ -75,7 +81,7 @@ function LibraryTrackRow({
     <li
       ref={setNodeRef}
       className={cn(
-        "min-w-0 border-b border-border-faint/60 last:border-b-0",
+        "flex min-w-0 items-stretch border-b border-border-faint/60 last:border-b-0",
         isDragging && "opacity-50",
       )}
     >
@@ -104,7 +110,7 @@ function LibraryTrackRow({
           setRevealShift(0);
         }}
         className={cn(
-          "touch-none flex w-full min-w-0 cursor-grab items-center px-grain py-1.5 text-left outline-none active:cursor-grabbing",
+          "touch-none flex min-w-0 flex-1 cursor-grab items-center px-grain py-1.5 text-left outline-none active:cursor-grabbing",
           "transition-[background-color] duration-[var(--duration-aware)] ease-[var(--ease-awareness)]",
           "hover:bg-surface-overlay/40 focus-visible:bg-surface-overlay/40",
           "focus-visible:ring-1 focus-visible:ring-lunar/50 focus-visible:ring-offset-2 focus-visible:ring-offset-void",
@@ -132,6 +138,27 @@ function LibraryTrackRow({
           </span>
         </span>
       </button>
+      {showAddShortcut && onAddToQueue ? (
+        <button
+          type="button"
+          aria-label="Add to playback queue"
+          onPointerDown={(e) => {
+            e.stopPropagation();
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onAddToQueue(entry.id);
+          }}
+          className={cn(
+            "shrink-0 border-l border-border-faint/60 px-2 py-1.5 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-text-inscription outline-none",
+            "transition-colors duration-[var(--duration-aware)] ease-[var(--ease-awareness)]",
+            "hover:bg-surface-overlay/35 hover:text-membrane-dim focus-visible:bg-surface-overlay/40",
+            "focus-visible:ring-1 focus-visible:ring-lunar/50",
+          )}
+        >
+          Add
+        </button>
+      ) : null}
     </li>
   );
 }
@@ -140,14 +167,19 @@ export function FloatingLibraryPanel({
   panelRef,
   libraryBoundsRef,
   stacked,
+  sheetMode = false,
   reduceMotion,
   className,
 }: FloatingLibraryPanelProps) {
-  const { library, playLibraryEntry } = useAudio();
+  const { library, playLibraryEntry, addLibraryEntryToQueueAt } = useAudio();
   const rm = reduceMotion === true;
 
   const onPlay = (id: string) => {
     void playLibraryEntry(id);
+  };
+
+  const onAddToQueue = (id: string) => {
+    void addLibraryEntryToQueueAt(id);
   };
 
   const layoutStyle = stacked
@@ -176,6 +208,8 @@ export function FloatingLibraryPanel({
                 entry={entry}
                 reduceMotion={reduceMotion}
                 onPlay={onPlay}
+                showAddShortcut={sheetMode}
+                onAddToQueue={sheetMode ? onAddToQueue : undefined}
               />
             ))}
           </ul>
@@ -192,7 +226,9 @@ export function FloatingLibraryPanel({
         aria-label="Library"
         className={cn(
           "relative flex w-full min-h-0 shrink-0 flex-col overflow-hidden border-b border-border-faint/80",
-          "max-h-[6rem]",
+          sheetMode
+            ? "max-h-none min-h-0 flex-1 border-b-0"
+            : "max-h-[6rem]",
           className,
         )}
       >

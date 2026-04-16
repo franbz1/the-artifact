@@ -7,9 +7,13 @@ import { ArtifactCameraZoom } from "./ArtifactCameraZoom";
 
 interface ArtifactSceneProps {
   analyserRef: RefObject<AnalyserNode | null>;
+  isMobileRef: RefObject<boolean>;
 }
 
-export function ArtifactScene({ analyserRef }: ArtifactSceneProps) {
+export function ArtifactScene({
+  analyserRef,
+  isMobileRef,
+}: ArtifactSceneProps) {
   const rawAmpRef = useRef(0);
 
   return (
@@ -19,9 +23,16 @@ export function ArtifactScene({ analyserRef }: ArtifactSceneProps) {
       <directionalLight position={[-5, -4, -2]} intensity={0.78} color="#e8dfd4" />
       <directionalLight position={[5, 4, 1]} intensity={4.2} color="#e8945c" />
 
-      <ArtifactMesh analyserRef={analyserRef} rawAmpOutRef={rawAmpRef} />
+      <ArtifactMesh
+        analyserRef={analyserRef}
+        rawAmpOutRef={rawAmpRef}
+        isMobileRef={isMobileRef}
+      />
       <ArtifactCameraZoom rawAmpInRef={rawAmpRef} />
 
+      {/* EffectComposer is kept on every device — without it the render target
+          / tone mapping path changes and the mesh becomes invisible on some
+          mobile GPUs. Bloom itself is cheap compared to losing the artifact. */}
       <EffectComposer multisampling={3}>
         <Bloom luminanceThreshold={0.2} intensity={0.38} luminanceSmoothing={0.55} />
       </EffectComposer>

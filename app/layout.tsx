@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -27,6 +27,12 @@ export const metadata: Metadata = {
   title: "The Artifact",
   description:
     "A relic that plays music — discovered at the intersection of brutalist architecture and living organism.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

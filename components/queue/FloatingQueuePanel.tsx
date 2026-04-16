@@ -83,6 +83,8 @@ function QueueAppendTailDropZone({
 export interface FloatingQueuePanelProps {
   /** When true, panel is a block inside the stacked sidebar (no fixed positioning). */
   stacked?: boolean;
+  /** Fill mobile bottom sheet when only the queue tab is shown. */
+  sheetMode?: boolean;
   reduceMotion: boolean | null;
   /** Highlights empty drop zone while dragging from library. */
   libraryDragActive?: boolean;
@@ -222,6 +224,7 @@ function QueueTrackRow({
 
 export function FloatingQueuePanel({
   stacked,
+  sheetMode = false,
   reduceMotion,
   libraryDragActive,
   className,
@@ -264,9 +267,11 @@ export function FloatingQueuePanel({
   );
 
   const motionStyle = stacked
-    ? {
-        maxHeight: `${QUEUE_FLOATING_PANEL_MAX_HEIGHT_REM}rem`,
-      }
+    ? sheetMode
+      ? undefined
+      : {
+          maxHeight: `${QUEUE_FLOATING_PANEL_MAX_HEIGHT_REM}rem`,
+        }
     : {
         right: `calc(${QUEUE_PANEL_RIGHT_OFFSET_REM}rem + env(safe-area-inset-right, 0px))`,
         zIndex: QUEUE_FLOATING_PANEL_Z,
@@ -300,7 +305,8 @@ export function FloatingQueuePanel({
         aria-label="Playback queue"
         style={motionStyle}
         className={cn(
-          "relative flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden",
+          "relative flex min-h-0 w-full min-w-0 flex-col overflow-hidden",
+          sheetMode ? "min-h-0 flex-1" : "flex-1",
           className,
         )}
       >

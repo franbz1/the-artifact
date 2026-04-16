@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ControlStrip } from "@/components/player/ControlStrip";
 import { ArtifactVolumeControl } from "@/components/player/ArtifactVolumeControl";
 import {
@@ -14,12 +14,48 @@ import { cn } from "@/lib/utils";
 import { useAudio } from "./AudioProvider";
 import { ACCEPTED_INPUT } from "./audio-file.constants";
 
+function GlyphVolume() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      className="h-5 w-5 text-membrane-dim"
+      aria-hidden
+    >
+      <path
+        d="M11 5 6 9H4v6h2l5 4V5z"
+        stroke="currentColor"
+        strokeWidth="1.25"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M15.5 9.5c.6.7.9 1.5.9 2.5s-.3 1.8-.9 2.5"
+        stroke="currentColor"
+        strokeWidth="1.25"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+export interface AudioChromeProps {
+  isMobile?: boolean;
+  onOpenLibrary?: () => void;
+  onOpenQueue?: () => void;
+}
+
 /**
  * Document-level file drop + hidden file input + control strip.
  */
-export function AudioChrome() {
+export function AudioChrome({
+  isMobile = false,
+  onOpenLibrary,
+  onOpenQueue,
+}: AudioChromeProps) {
   const { addLibraryFiles, fileName, isLoaded } = useAudio();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [mobileVolumeOpen, setMobileVolumeOpen] = useState(false);
+  const mobileVolRef = useRef<HTMLDivElement>(null);
 
   const onDropFiles = useCallback(
     (files: File[]) => {
@@ -44,6 +80,18 @@ export function AudioChrome() {
   const onOpenFile = useCallback(() => {
     fileInputRef.current?.click();
   }, []);
+
+  useEffect(() => {
+    if (!mobileVolumeOpen) return;
+    const onDown = (e: MouseEvent) => {
+      const el = mobileVolRef.current;
+      if (!el?.contains(e.target as Node)) {
+        setMobileVolumeOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", onDown);
+    return () => document.removeEventListener("pointerdown", onDown);
+  }, [mobileVolumeOpen]);
 
   return (
     <>
@@ -72,14 +120,16 @@ export function AudioChrome() {
         <TrackTitleTrim
           text={fileName ?? "No track"}
           align="start"
-          maxWidthRem={TRACK_TITLE_CORNER_MAX_REM}
+          maxWidthRem={
+            isMobile ? Math.min(18, TRACK_TITLE_CORNER_MAX_REM) : TRACK_TITLE_CORNER_MAX_REM
+          }
           className={
             fileName ? "text-membrane-dim/80" : "text-membrane-dim/55"
           }
         />
       </div>
 
-      {isLoaded ? (
+      {isLoaded && !isMobile ? (
         <div
           className={cn(
             "fixed left-4 z-50 md:left-8",
@@ -96,7 +146,50 @@ export function AudioChrome() {
         </div>
       ) : null}
 
-      <ControlStrip onOpenFile={onOpenFile} />
+      {isLoaded && isMobile ? (
+        <div
+          ref={mobileVolRef}
+          className={cn(
+            "fixed left-4 z-[48] flex flex-col items-start gap-2",
+            "bottom-[max(10rem,calc(6rem+env(safe-area-inset-bottom,0px)))]",
+          )}
+        >
+          <button
+            type="button"
+            aria-expanded={mobileVolumeOpen}
+            aria-controls="artifact-volume-popover"
+            onClick={() => setMobileVolumeOpen((v) => !v)}
+            className={cn(
+              "interact-aware flex h-10 w-10 items-center justify-center rounded-worn border border-border-faint/80 bg-surface-overlay/90 shadow-depth backdrop-blur-sm outline-none",
+              "focus-visible:ring-1 focus-visible:ring-lunar/50",
+            )}
+          >
+            <GlyphVolume />
+            <span className="sr-only">Volume</span>
+          </button>
+          {mobileVolumeOpen ? (
+            <div
+              id="artifact-volume-popover"
+              className={cn(
+                "w-[min(calc(100vw-2rem),14rem)] rounded-worn border border-border-faint/80 bg-surface-overlay/95 px-breath py-grain shadow-depth backdrop-blur-md",
+                "[animation:var(--animate-dissolve-in)] motion-reduce:[animation:none]",
+              )}
+            >
+              <ArtifactVolumeControl
+                layout="horizontal"
+                trackLengthPx={200}
+              />
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      <ControlStrip
+        onOpenFile={onOpenFile}
+        isMobile={isMobile}
+        onOpenLibrary={onOpenLibrary}
+        onOpenQueue={onOpenQueue}
+      />
     </>
   );
 }

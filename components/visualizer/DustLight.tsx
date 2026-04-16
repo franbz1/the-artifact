@@ -51,9 +51,11 @@ function respawnMote(mote: DustMote, width: number, height: number) {
 
 interface DustLightProps {
   className?: string;
+  /** Fewer motes on touch devices for smoother frames. */
+  isMobile?: boolean;
 }
 
-export function DustLight({ className }: DustLightProps) {
+export function DustLight({ className, isMobile = false }: DustLightProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const motesRef = useRef<DustMote[]>([]);
   const rafRef = useRef<number>(0);
@@ -72,6 +74,10 @@ export function DustLight({ className }: DustLightProps) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    const particleCount = isMobile
+      ? Math.max(14, Math.floor(DUST_LIGHT_CONFIG.particleCount * 0.42))
+      : DUST_LIGHT_CONFIG.particleCount;
+
     let currentDpr = 1;
 
     const resize = () => {
@@ -82,10 +88,9 @@ export function DustLight({ className }: DustLightProps) {
       canvas.style.height = `${window.innerHeight}px`;
       ctx.setTransform(currentDpr, 0, 0, currentDpr, 0, 0);
 
-      if (motesRef.current.length === 0) {
-        motesRef.current = Array.from(
-          { length: DUST_LIGHT_CONFIG.particleCount },
-          () => createMote(window.innerWidth, window.innerHeight),
+      if (motesRef.current.length !== particleCount) {
+        motesRef.current = Array.from({ length: particleCount }, () =>
+          createMote(window.innerWidth, window.innerHeight),
         );
       }
     };
@@ -205,7 +210,7 @@ export function DustLight({ className }: DustLightProps) {
       cancelAnimationFrame(rafRef.current);
       window.removeEventListener("resize", resize);
     };
-  }, []);
+  }, [isMobile]);
 
   return (
     <canvas

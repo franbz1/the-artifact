@@ -2,11 +2,10 @@ import * as THREE from "three";
 import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 import { SPHERE_CONFIG } from "./artifact.constants";
 
-export function createArtifactGeometry(): THREE.BufferGeometry {
-  const raw = new THREE.IcosahedronGeometry(
-    SPHERE_CONFIG.radius,
-    SPHERE_CONFIG.detail,
-  );
+export function createArtifactGeometry(
+  detail: number = SPHERE_CONFIG.detail,
+): THREE.BufferGeometry {
+  const raw = new THREE.IcosahedronGeometry(SPHERE_CONFIG.radius, detail);
 
   const geo = mergeVertices(raw);
   geo.computeVertexNormals();

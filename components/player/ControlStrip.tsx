@@ -22,6 +22,9 @@ import {
 interface ControlStripProps {
   className?: string;
   onOpenFile: () => void;
+  isMobile?: boolean;
+  onOpenLibrary?: () => void;
+  onOpenQueue?: () => void;
 }
 
 function GlyphSkip({ direction }: { direction: "back" | "forward" }) {
@@ -192,6 +195,48 @@ function QueueSkipButton({
   );
 }
 
+function GlyphLibrary() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      className="h-6 w-6 text-membrane-dim"
+      aria-hidden
+    >
+      <path
+        d="M6 7.5h12M6 12h12M6 16.5h9"
+        stroke="currentColor"
+        strokeWidth="1.25"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function GlyphQueue() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      className="h-6 w-6 text-membrane-dim"
+      aria-hidden
+    >
+      <path
+        d="M8 7h9M8 12h9M8 17h6"
+        stroke="currentColor"
+        strokeWidth="1.25"
+        strokeLinecap="round"
+      />
+      <path
+        d="M6 7h.01M6 12h.01M6 17h.01"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 function GlyphOpen() {
   return (
     <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6 text-membrane-dim">
@@ -212,7 +257,22 @@ function GlyphOpen() {
   );
 }
 
-export function ControlStrip({ className, onOpenFile }: ControlStripProps) {
+const transportRevealClass = (isMobile: boolean) =>
+  isMobile
+    ? "pointer-events-auto opacity-100"
+    : cn(
+        "pointer-events-none opacity-0",
+        "group-hover:pointer-events-auto group-hover:opacity-100",
+        "group-has-[button:focus-visible]:pointer-events-auto group-has-[button:focus-visible]:opacity-100",
+      );
+
+export function ControlStrip({
+  className,
+  onOpenFile,
+  isMobile = false,
+  onOpenLibrary,
+  onOpenQueue,
+}: ControlStripProps) {
   const {
     toggle,
     seek,
@@ -366,59 +426,54 @@ export function ControlStrip({ className, onOpenFile }: ControlStripProps) {
               </button>
             </div>
           ) : (
-            <div
-              className={cn(
-                "grid w-full grid-cols-[1fr_auto_1fr] items-center gap-x-2 gap-y-0 px-0.5 py-0.5 transition-colors duration-300 ease-[var(--ease-awareness)]",
-              )}
-            >
+            <>
               <div
                 className={cn(
-                  "flex min-h-7 w-full items-center justify-end gap-1.5 self-center transition-opacity duration-300 ease-[var(--ease-awareness)]",
-                  "pointer-events-none justify-self-end opacity-0",
-                  "group-hover:pointer-events-auto group-hover:opacity-100",
-                  "group-has-[button:focus-visible]:pointer-events-auto group-has-[button:focus-visible]:opacity-100",
+                  "grid w-full grid-cols-[1fr_auto_1fr] items-center gap-x-2 gap-y-0 px-0.5 py-0.5 transition-colors duration-300 ease-[var(--ease-awareness)]",
                 )}
               >
-                <QueueSkipButton
-                  direction="back"
-                  isLoaded={isLoaded}
-                  duration={duration}
-                  currentTime={currentTime}
-                  seek={seek}
-                  skipToPrevious={skipToPrevious}
-                  skipToNext={skipToNext}
-                />
-              </div>
-
-              <div
-                className={cn(
-                  "flex justify-center justify-self-center transition-opacity duration-300 ease-[var(--ease-awareness)]",
-                  "pointer-events-none opacity-0",
-                  "group-hover:pointer-events-auto group-hover:opacity-100",
-                  "group-has-[button:focus-visible]:pointer-events-auto group-has-[button:focus-visible]:opacity-100",
-                )}
-              >
-                <button
-                  type="button"
-                  aria-pressed={isPlaying}
-                  aria-label={isPlaying ? "Pause" : "Play"}
-                  onClick={() => void toggle()}
-                  className={cn(
-                    "interact-aware cursor-pointer rounded-sm p-1.5 outline-none",
-                    "focus-visible:ring-1 focus-visible:ring-lunar/50",
-                  )}
-                >
-                  <GlyphPlayPause playing={isPlaying} />
-                </button>
-              </div>
-
-              <div className="flex min-h-7 w-full max-w-full items-center justify-start justify-self-start gap-2">
                 <div
                   className={cn(
-                    "flex items-center gap-2 opacity-0 transition-opacity duration-300 ease-[var(--ease-awareness)]",
-                    "pointer-events-none",
-                    "group-hover:pointer-events-auto group-hover:opacity-100",
-                    "group-has-[button:focus-visible]:pointer-events-auto group-has-[button:focus-visible]:opacity-100",
+                    "flex min-h-7 w-full items-center justify-end gap-1.5 self-center transition-opacity duration-300 ease-[var(--ease-awareness)]",
+                    "justify-self-end",
+                    transportRevealClass(isMobile),
+                  )}
+                >
+                  <QueueSkipButton
+                    direction="back"
+                    isLoaded={isLoaded}
+                    duration={duration}
+                    currentTime={currentTime}
+                    seek={seek}
+                    skipToPrevious={skipToPrevious}
+                    skipToNext={skipToNext}
+                  />
+                </div>
+
+                <div
+                  className={cn(
+                    "flex justify-center justify-self-center transition-opacity duration-300 ease-[var(--ease-awareness)]",
+                    transportRevealClass(isMobile),
+                  )}
+                >
+                  <button
+                    type="button"
+                    aria-pressed={isPlaying}
+                    aria-label={isPlaying ? "Pause" : "Play"}
+                    onClick={() => void toggle()}
+                    className={cn(
+                      "interact-aware cursor-pointer rounded-sm p-1.5 outline-none",
+                      "focus-visible:ring-1 focus-visible:ring-lunar/50",
+                    )}
+                  >
+                    <GlyphPlayPause playing={isPlaying} />
+                  </button>
+                </div>
+
+                <div
+                  className={cn(
+                    "flex min-h-7 w-full max-w-full items-center justify-start justify-self-start gap-2 transition-opacity duration-300 ease-[var(--ease-awareness)]",
+                    transportRevealClass(isMobile),
                   )}
                 >
                   <QueueSkipButton
@@ -432,7 +487,35 @@ export function ControlStrip({ className, onOpenFile }: ControlStripProps) {
                   />
                 </div>
               </div>
-            </div>
+              {isMobile && onOpenLibrary && onOpenQueue ? (
+                <div className="mt-2 flex w-full justify-center gap-8 border-t border-border-faint/50 pt-2">
+                  <button
+                    type="button"
+                    onClick={onOpenLibrary}
+                    aria-label="Open library"
+                    className={cn(
+                      "interact-aware flex cursor-pointer flex-col items-center gap-0.5 rounded-sm px-2 py-1 outline-none",
+                      "focus-visible:ring-1 focus-visible:ring-lunar/50",
+                    )}
+                  >
+                    <GlyphLibrary />
+                    <span className="text-rune tracking-[0.18em]">Library</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onOpenQueue}
+                    aria-label="Open playback queue"
+                    className={cn(
+                      "interact-aware flex cursor-pointer flex-col items-center gap-0.5 rounded-sm px-2 py-1 outline-none",
+                      "focus-visible:ring-1 focus-visible:ring-lunar/50",
+                    )}
+                  >
+                    <GlyphQueue />
+                    <span className="text-rune tracking-[0.18em]">Queue</span>
+                  </button>
+                </div>
+              ) : null}
+            </>
           )}
         </div>
       </div>

@@ -4,6 +4,7 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -66,6 +67,9 @@ interface SecondaryPanelProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   className?: string;
+  isMobile?: boolean;
+  mobileActiveTab?: "library" | "queue";
+  onMobileTabChange?: (tab: "library" | "queue") => void;
 }
 
 type ActiveDragInfo = {
@@ -121,6 +125,9 @@ export function SecondaryPanel({
   open,
   onOpenChange,
   className,
+  isMobile = false,
+  mobileActiveTab = "library",
+  onMobileTabChange,
 }: SecondaryPanelProps) {
   const reduceMotion = useReducedMotion();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -158,7 +165,10 @@ export function SecondaryPanel({
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: { distance: 6 },
+      activationConstraint: { distance: 8 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 220, tolerance: 8 },
     }),
   );
 
@@ -366,118 +376,230 @@ export function SecondaryPanel({
     setQueueDragOutside(false);
   }, []);
 
+  const setMobileTab = useCallback(
+    (tab: "library" | "queue") => {
+      onMobileTabChange?.(tab);
+    },
+    [onMobileTabChange],
+  );
+
   return (
     <>
-    <div
-      className={cn(
-        "pointer-events-none fixed inset-y-0 right-0 z-40",
-        "pr-[env(safe-area-inset-right,0px)]",
-        className,
-      )}
+    <DndContext
+      sensors={sensors}
+      collisionDetection={collisionDetection}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragEnd={handleDragEnd}
+      onDragCancel={handleDragCancel}
     >
-      <DndContext
-        sensors={sensors}
-        collisionDetection={collisionDetection}
-        onDragStart={handleDragStart}
-        onDragOver={handleDragOver}
-        onDragEnd={handleDragEnd}
-        onDragCancel={handleDragCancel}
-      >
-        <AnimatePresence>
-          {open ? (
+      {!isMobile ? (
+        <div
+          className={cn(
+            "pointer-events-none fixed inset-y-0 right-0 z-40",
+            "pr-[env(safe-area-inset-right,0px)]",
+            className,
+          )}
+        >
+          <AnimatePresence>
+            {open ? (
+              <motion.div
+                key="sidebar-stack"
+                ref={panelRef}
+                id={SECONDARY_PANEL_REGION_ID}
+                role="region"
+                aria-label="Library and playback queue"
+                initial={
+                  reduceMotion
+                    ? { opacity: 0 }
+                    : { opacity: 0, x: 10 }
+                }
+                animate={{ opacity: 1, x: 0 }}
+                exit={
+                  reduceMotion
+                    ? { opacity: 0, transition: { duration: 0.1 } }
+                    : { opacity: 0, x: 10, transition: { duration: 0.3 } }
+                }
+                transition={{ duration: 0.35, ease: [0.22, 0.68, 0.35, 1] }}
+                style={{
+                  right: `calc(${LIBRARY_PANEL_RIGHT_OFFSET_REM}rem + env(safe-area-inset-right, 0px))`,
+                  zIndex: LIBRARY_FLOATING_PANEL_Z,
+                }}
+                className={cn(
+                  "pointer-events-auto fixed isolate flex max-h-[min(90vh,36rem)] flex-col overflow-hidden rounded-2xl",
+                  "glass-obsidian",
+                  ARTIFACT_ZONE_CENTER_Y_CLASS,
+                  LIBRARY_FLOATING_PANEL_WIDTH_CLASS,
+                )}
+              >
+                <FloatingLibraryPanel
+                  stacked
+                  libraryBoundsRef={libraryPanelBoundsRef}
+                  reduceMotion={reduceMotion}
+                />
+                <FloatingQueuePanel
+                  stacked
+                  reduceMotion={reduceMotion}
+                  libraryDragActive={activeInfo?.kind === "library"}
+                />
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+
+          <div
+            ref={triggerRef}
+            className={cn(
+              "group/trigger pointer-events-auto absolute right-0 flex items-center justify-end",
+              ARTIFACT_ZONE_CENTER_Y_CLASS,
+              "motion-reduce:transition-none",
+            )}
+            style={{
+              width: `${SECONDARY_PANEL_TRIGGER_GUTTER_REM}rem`,
+              height: `min(${SECONDARY_PANEL_TRIGGER_ZONE_VH}vh, 14rem)`,
+            }}
+          >
+            <button
+              type="button"
+              aria-expanded={open}
+              aria-controls={SECONDARY_PANEL_REGION_ID}
+              aria-label={open ? "Close library and queue" : "Open library and queue"}
+              onClick={toggleFromButton}
+              className={cn(
+                "pointer-events-none flex h-12 w-12 shrink-0 items-center justify-center bg-transparent outline-none",
+                "group-hover/trigger:pointer-events-auto",
+                "focus-visible:pointer-events-auto",
+                "focus-visible:ring-1 focus-visible:ring-lunar/50 focus-visible:ring-offset-2 focus-visible:ring-offset-void",
+                "cursor-pointer",
+                "transition-[opacity,filter] duration-[var(--duration-aware)] ease-[var(--ease-awareness)]",
+                "motion-reduce:duration-150",
+                "opacity-0 blur-[6px] motion-reduce:blur-none",
+                "group-hover/trigger:opacity-100 group-hover/trigger:blur-none",
+                "focus-visible:opacity-100 focus-visible:blur-none",
+              )}
+            >
+              <GlyphRevealPanel
+                className={cn(
+                  "animate-pulse-faint motion-reduce:animate-none",
+                  open && "pointer-events-none opacity-0 animate-none",
+                )}
+              />
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      <AnimatePresence>
+        {isMobile && open ? (
+          <motion.div
+            key="mobile-sheet"
+            className="fixed inset-0 z-[52] flex flex-col justify-end"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25, ease: [0.4, 0, 0.1, 1] }}
+          >
+            <button
+              type="button"
+              aria-label="Close library and queue"
+              className="min-h-0 w-full flex-1 cursor-default bg-scrim/60 backdrop-blur-[2px]"
+              onClick={closePanel}
+            />
             <motion.div
-              key="sidebar-stack"
               ref={panelRef}
               id={SECONDARY_PANEL_REGION_ID}
               role="region"
               aria-label="Library and playback queue"
-              initial={
-                reduceMotion
-                  ? { opacity: 0 }
-                  : { opacity: 0, x: 10 }
-              }
-              animate={{ opacity: 1, x: 0 }}
-              exit={
-                reduceMotion
-                  ? { opacity: 0, transition: { duration: 0.1 } }
-                  : { opacity: 0, x: 10, transition: { duration: 0.3 } }
-              }
-              transition={{ duration: 0.35, ease: [0.22, 0.68, 0.35, 1] }}
-              style={{
-                right: `calc(${LIBRARY_PANEL_RIGHT_OFFSET_REM}rem + env(safe-area-inset-right, 0px))`,
-                zIndex: LIBRARY_FLOATING_PANEL_Z,
-              }}
+              initial={reduceMotion ? { y: 12 } : { y: "85%" }}
+              animate={{ y: 0 }}
+              exit={reduceMotion ? { y: 12 } : { y: "100%" }}
+              transition={{ duration: 0.38, ease: [0.22, 0.68, 0.35, 1] }}
               className={cn(
-                "pointer-events-auto fixed isolate flex max-h-[min(90vh,36rem)] flex-col overflow-hidden rounded-2xl",
+                "pointer-events-auto flex max-h-[min(88vh,40rem)] min-h-[40vh] flex-col overflow-hidden rounded-t-2xl",
+                "border border-border-faint/80 shadow-depth",
                 "glass-obsidian",
-                ARTIFACT_ZONE_CENTER_Y_CLASS,
-                LIBRARY_FLOATING_PANEL_WIDTH_CLASS,
+                "mx-0 pb-[env(safe-area-inset-bottom,0px)] pl-[env(safe-area-inset-left,0px)] pr-[env(safe-area-inset-right,0px)]",
               )}
             >
-              <FloatingLibraryPanel
-                stacked
-                libraryBoundsRef={libraryPanelBoundsRef}
-                reduceMotion={reduceMotion}
-              />
-              <FloatingQueuePanel
-                stacked
-                reduceMotion={reduceMotion}
-                libraryDragActive={activeInfo?.kind === "library"}
-              />
+              <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border-faint/80 px-breath py-grain">
+                <div
+                  className="flex gap-1"
+                  role="tablist"
+                  aria-label="Library or queue"
+                >
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={mobileActiveTab === "library"}
+                    onClick={() => {
+                      setMobileTab("library");
+                    }}
+                    className={cn(
+                      "rounded-worn px-3 py-1.5 font-sans text-xs font-medium uppercase tracking-[0.18em] outline-none transition-colors duration-[var(--duration-aware)] ease-[var(--ease-awareness)]",
+                      "focus-visible:ring-1 focus-visible:ring-lunar/50",
+                      mobileActiveTab === "library"
+                        ? "bg-lunar/12 text-membrane"
+                        : "text-text-inscription hover:text-membrane-dim",
+                    )}
+                  >
+                    Library
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={mobileActiveTab === "queue"}
+                    onClick={() => {
+                      setMobileTab("queue");
+                    }}
+                    className={cn(
+                      "rounded-worn px-3 py-1.5 font-sans text-xs font-medium uppercase tracking-[0.18em] outline-none transition-colors duration-[var(--duration-aware)] ease-[var(--ease-awareness)]",
+                      "focus-visible:ring-1 focus-visible:ring-lunar/50",
+                      mobileActiveTab === "queue"
+                        ? "bg-lunar/12 text-membrane"
+                        : "text-text-inscription hover:text-membrane-dim",
+                    )}
+                  >
+                    Queue
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={closePanel}
+                  className="text-inscription interact-aware rounded-sm px-2 py-1 font-sans text-xs outline-none focus-visible:ring-1 focus-visible:ring-lunar/50"
+                >
+                  Close
+                </button>
+              </div>
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                {mobileActiveTab === "library" ? (
+                  <FloatingLibraryPanel
+                    stacked
+                    sheetMode
+                    libraryBoundsRef={libraryPanelBoundsRef}
+                    reduceMotion={reduceMotion}
+                  />
+                ) : (
+                  <FloatingQueuePanel
+                    stacked
+                    sheetMode
+                    reduceMotion={reduceMotion}
+                    libraryDragActive={activeInfo?.kind === "library"}
+                  />
+                )}
+              </div>
             </motion.div>
-          ) : null}
-        </AnimatePresence>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
-        <DragOverlay dropAnimation={{ duration: 220, easing: "ease-out" }}>
-          {activeInfo ? (
-            <DragGhostRow
-              label={activeInfo.label}
-              dismiss={activeInfo.kind === "queue" && queueDragOutside}
-            />
-          ) : null}
-        </DragOverlay>
-      </DndContext>
-
-      <div
-        ref={triggerRef}
-        className={cn(
-          "group/trigger pointer-events-auto absolute right-0 flex items-center justify-end",
-          ARTIFACT_ZONE_CENTER_Y_CLASS,
-          "motion-reduce:transition-none",
-        )}
-        style={{
-          width: `${SECONDARY_PANEL_TRIGGER_GUTTER_REM}rem`,
-          height: `min(${SECONDARY_PANEL_TRIGGER_ZONE_VH}vh, 14rem)`,
-        }}
-      >
-        <button
-          type="button"
-          aria-expanded={open}
-          aria-controls={SECONDARY_PANEL_REGION_ID}
-          aria-label={open ? "Close library and queue" : "Open library and queue"}
-          onClick={toggleFromButton}
-          className={cn(
-            "pointer-events-none flex h-12 w-12 shrink-0 items-center justify-center bg-transparent outline-none",
-            "group-hover/trigger:pointer-events-auto",
-            "focus-visible:pointer-events-auto",
-            "focus-visible:ring-1 focus-visible:ring-lunar/50 focus-visible:ring-offset-2 focus-visible:ring-offset-void",
-            "cursor-pointer",
-            "transition-[opacity,filter] duration-[var(--duration-aware)] ease-[var(--ease-awareness)]",
-            "motion-reduce:duration-150",
-            "opacity-0 blur-[6px] motion-reduce:blur-none",
-            "group-hover/trigger:opacity-100 group-hover/trigger:blur-none",
-            "focus-visible:opacity-100 focus-visible:blur-none",
-          )}
-        >
-          <GlyphRevealPanel
-            className={cn(
-              "animate-pulse-faint motion-reduce:animate-none",
-              open && "pointer-events-none opacity-0 animate-none",
-            )}
+      <DragOverlay dropAnimation={{ duration: 220, easing: "ease-out" }}>
+        {activeInfo ? (
+          <DragGhostRow
+            label={activeInfo.label}
+            dismiss={activeInfo.kind === "queue" && queueDragOutside}
           />
-        </button>
-      </div>
-    </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
 
     <AnimatePresence>
       {libraryRemovePrompt ? (

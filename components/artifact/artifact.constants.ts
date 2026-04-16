@@ -3,10 +3,22 @@ export const ARTIFACT_CONTAINER_SIZE = {
   height: "min(90vh, 600px)",
 } as const;
 
+/** Narrow viewports / touch — room for wave strip + transport + safe areas. */
+export const ARTIFACT_CONTAINER_SIZE_MOBILE = {
+  width: "min(85vw, 340px)",
+  height: "min(60vh, 340px)",
+} as const;
+
 export const SPHERE_CONFIG = {
   radius: 1.0,
   detail: 14,
 } as const;
+
+/** Lower subdivision on mobile for GPU headroom (see createArtifactGeometry). */
+export const SPHERE_DETAIL_MOBILE = 11;
+
+/** Slow Y rotation when drag is disabled (radians per second). */
+export const MOBILE_AUTO_ROTATE_RAD_PER_SEC = 0.03;
 
 export const PERF_CONFIG = {
   normalUpdateStride: 2,
@@ -78,6 +90,22 @@ export const SHIVER_CONFIG = {
   amplitude: 0.06,
   /** Gaussian half-width — controls how tight the ripple band is. */
   waveSigma: 0.05,
+} as const;
+
+/** Micro ripples during playback: tied to RMS spikes and camera zoom drive (same raw^power curve). */
+export const SHIVER_PLAYBACK_CONFIG = {
+  /** Min frame-to-frame increase in raw RMS (0–1) to count as an attack. */
+  minRawDelta: 0.042,
+  /** rawDelta / this → normalized spike strength before capping at 1. */
+  deltaReference: 0.13,
+  /** Base radius displacement; scaled per wave by strength (smaller than idle SHIVER_CONFIG.amplitude). */
+  microAmplitude: 0.022,
+  microWaveSigma: 0.088,
+  /** Faster than idle shiver so hits read as transient “glitches”. */
+  microDuration: 0.38,
+  /** Min seconds between spawns (avoids burst noise). */
+  spawnCooldown: 0.045,
+  maxConcurrentWaves: 5,
 } as const;
 
 export const MATERIAL_CONFIG = {

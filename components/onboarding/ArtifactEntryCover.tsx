@@ -5,15 +5,12 @@ import { cn } from "@/lib/utils";
 const GITHUB_HREF = "https://github.com/franbz1";
 
 export interface ArtifactEntryCoverProps {
-  /** When true, user cannot enter the player (desktop-only lock). */
-  isMobileViewport: boolean;
-  /** Called when the user chooses to continue (desktop only). */
+  /** Called when the user chooses to continue into the experience. */
   onContinue: () => void;
   className?: string;
 }
 
 export function ArtifactEntryCover({
-  isMobileViewport,
   onContinue,
   className,
 }: ArtifactEntryCoverProps) {
@@ -24,7 +21,7 @@ export function ArtifactEntryCover({
       aria-labelledby="artifact-entry-title"
       className={cn(
         "fixed inset-0 z-[110] flex items-center justify-center overflow-y-auto",
-        "bg-scrim/95 px-breath py-altar backdrop-blur-[2px]",
+        "bg-scrim/95 px-breath py-breath backdrop-blur-[2px] md:py-altar",
         className,
       )}
     >
@@ -59,37 +56,27 @@ export function ArtifactEntryCover({
           Drop audio files on the page to add them to your library and hear them in
           this space. The{" "}
           <span className="text-membrane/90">Library</span> and{" "}
-          <span className="text-membrane/90">Playback queue</span> are fully
-          drag-and-drop: delete, add, and reorder tracks; drag between lists to build your
-          session.
+          <span className="text-membrane/90">Playback queue</span> support
+          drag-and-drop on desktop; on touch devices use{" "}
+          <span className="text-membrane/90">Open</span> and the library controls to
+          add tracks.
         </p>
 
-        {isMobileViewport ? (
-          <div
-            className="mt-breath border border-lunar/25 bg-stone px-grain py-grain font-sans text-sm leading-relaxed text-membrane"
-            role="status"
+        <div className="mt-breath flex flex-col items-stretch gap-grain">
+          <button
+            type="button"
+            onClick={onContinue}
+            className={cn(
+              "font-sans text-sm font-medium tracking-wide text-membrane cursor-pointer",
+              "rounded-worn border border-lunar/40 bg-lunar/10 px-breath py-grain",
+              "shadow-glow-lunar/20 transition-[background-color,box-shadow,border-color] duration-[var(--duration-aware)] ease-[var(--ease-awareness)]",
+              "hover:border-lunar/60 hover:bg-lunar/15 hover:shadow-glow-lunar/30",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lunar/45 focus-visible:ring-offset-2 focus-visible:ring-offset-void",
+            )}
           >
-            <strong className="font-medium text-lunar-bright">Desktop only.</strong>{" "}
-            This installation is built for pointer and keyboard control on a PC or
-            laptop. It does not support phones or small touch devices.
-          </div>
-        ) : (
-          <div className="mt-breath flex flex-col items-stretch gap-grain">
-            <button
-              type="button"
-              onClick={onContinue}
-              className={cn(
-                "font-sans text-sm font-medium tracking-wide text-membrane cursor-pointer",
-                "rounded-worn border border-lunar/40 bg-lunar/10 px-breath py-grain",
-                "shadow-glow-lunar/20 transition-[background-color,box-shadow,border-color] duration-[var(--duration-aware)] ease-[var(--ease-awareness)]",
-                "hover:border-lunar/60 hover:bg-lunar/15 hover:shadow-glow-lunar/30",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lunar/45 focus-visible:ring-offset-2 focus-visible:ring-offset-void",
-              )}
-            >
-              Continue
-            </button>
-          </div>
-        )}
+            Continue
+          </button>
+        </div>
       </div>
     </div>
   );

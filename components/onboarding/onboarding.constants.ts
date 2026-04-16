@@ -20,5 +20,4 @@ export function readArtifactOnboardCookie(): boolean {
   });
 }
 
-/** Viewports at or below this width are treated as mobile (desktop-only experience). */
-export const MOBILE_MAX_WIDTH_PX = 768;
+export { MOBILE_MAX_WIDTH_PX } from "@/lib/mobile.constants";
